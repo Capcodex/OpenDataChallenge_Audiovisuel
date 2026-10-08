@@ -1,6 +1,6 @@
 # ADR-005 · Seuils des liens de co-audience (RG-01, RG-04, RG-05)
 
-- **Statut :** RG-01 et RG-04 **acceptés** · RG-05 **proposée**, décision du porteur du projet attendue avant T-030 (sprint 3)
+- **Statut :** acceptée · RG-01 et RG-04 maintenus ; **option C retenue** pour RG-05 par le porteur du projet le 8 octobre 2026
 - **Date :** 8 octobre 2026
 - **Références :** T-025, T-026, RG-01, RG-04, RG-05, RG-15, CdC technique § 7.4 ; rapport [docs/exploration/seuils.md](../exploration/seuils.md)
 
@@ -33,7 +33,7 @@ Seuil **maintenu**. Il exclut 12 médias non génériques : 11 cités par person
 
 Seuil **maintenu**. La largeur médiane de l'intervalle, rapportée au lift, est de 93 % sous 30 répondants communs, 63 % entre 30 et 49, 44 % entre 50 et 99. Sous 30, le lift est trop imprécis pour être publié. Monter à 50 isolerait 5 médias sans gain décisif.
 
-### RG-05 : borne basse du lift (proposée, à trancher)
+### RG-05 : borne basse du lift (option C retenue)
 
 | Option | Règle | Liens | Densité | Médias isolés | Effet sur les règles |
 |---|---|---|---|---|---|
@@ -46,13 +46,13 @@ Seuil **maintenu**. La largeur médiane de l'intervalle, rapportée au lift, est
 - Les données publiées gardent la règle statistique d'origine. RG-05 n'est pas modifiée et reste vérifiable par un chercheur (persona Claire).
 - La carte devient lisible. Aucun média n'est isolé : TF1 garde ses voisins les plus proches malgré le plafond de son lift. Le degré médian reste de 18 à l'écran : la mise en évidence au survol (EF-M1) reste nécessaire. Avec 3 voisins minimum : 601 liens, avec 8 : 673. Le choix de ce nombre a peu d'effet.
 - Le lift de référence est affiché dans la fiche et la page « Méthode » comme repère de lecture : « un lift de 1,6 correspond à ce que produit la seule intensité de consommation ».
-- Les familles (Leiden, sprint 3) sont calculées sur tous les liens retenus, pondérés par `log(lift)`. Cette pondération atténue déjà les liens proches de 1. La comparaison avec la seule partie affichée sera faite dans T-032.
+- Les familles (Leiden) devaient être calculées sur tous les liens retenus. L'exploration du sprint 3 a montré qu'elles n'y sont pas stables : elles sont calculées sur les liens affichés ([ADR-007](ADR-007-familles.md)).
 
 **Option écartée pour la V1 :** remplacer le lift par une mesure corrigée de l'intensité (lift conditionnel au nombre de médias suivis, corrélation, PMI normalisé). Cela changerait RG-15 et la lecture « deux fois plus que le hasard » que comprennent les personas. À réévaluer en V2.
 
-## Conséquences
+## Conséquences (mises en œuvre au sprint 3)
 
-- **Si l'option C est retenue :** ajouter `affichage.voisins_min_par_media` à `params.yaml` (sprint 3), un drapeau `affiche` dans `liens.parquet`, et la règle dans la page « Méthode ». Prévoir environ 2 h au sprint 3 (T-033, disposition calculée sur les liens affichés).
-- **Si l'option B est retenue :** `lien_lift_borne_basse_min` devient `"reference"` dans `params.yaml`, RG-05 est réécrite dans le CdCF, et TF1 apparaît sans lien (message dédié dans la fiche).
-- **Si l'option A est retenue :** aucun changement de code. Il faudra un affichage des liens au survol seulement (risque « graphe trop dense » du CdCT § 15).
-- Dans tous les cas, `docs/methode.md` et la page « Méthode » présentent le lift de référence.
+- `params.yaml` : section `affichage`, `voisins_min_par_media: 5`.
+- `liens.parquet` : colonne `affiche` (623 liens sur 1 413 en 2026). Les exports publient tous les liens retenus, avec cette colonne.
+- La disposition de la carte (ADR-008) et les familles (ADR-007) sont calculées sur les liens affichés. Sur tous les liens retenus, aucune partition en familles utiles ne respecte RG-07 (ADR-007).
+- `docs/methode.md` présente la règle d'affichage et le lift de référence.

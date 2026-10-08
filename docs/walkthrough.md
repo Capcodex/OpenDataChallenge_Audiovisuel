@@ -1,8 +1,8 @@
 # Walkthrough : ce qui a été construit jusqu'ici
 
-Ce document fait visiter le projet tel qu'il est à la fin du **sprint 2** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
+Ce document fait visiter le projet tel qu'il est à la fin du **sprint 3** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
 
-Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour les bilans chiffrés, voir [sprints/sprint-1.md](sprints/sprint-1.md) et [sprints/sprint-2.md](sprints/sprint-2.md). Pour la méthode de calcul, voir [methode.md](methode.md).
+Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour les bilans chiffrés, voir [sprints/](sprints/). Pour la méthode de calcul, voir [methode.md](methode.md).
 
 ---
 
@@ -18,6 +18,7 @@ Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour l
 | Planification | Plan d'implémentation (8 semaines), backlog d'implémentation (88 tâches) | `~/dev/Implementation/plan_implementation_graphe_medias.md`, `~/dev/Implementation/backlog_implementation_graphe_medias.md` |
 | **Sprint 1** | Socle Docker, ingestion, table répondant × média | `graphe-medias/` |
 | **Sprint 2** | Liens de co-audience, profils des publics, image du site | `graphe-medias/` |
+| **Sprint 3** | Familles, disposition de la carte, jetons de design, textes de l'interface | `graphe-medias/` |
 
 > Les documents de conception, d'abord dans `~/Documents/Data Viz/`, sont désormais dans `~/dev/Implementation/`, à côté du dépôt. `produits_data.md` ne se trouve dans aucun des deux dossiers.
 
@@ -33,7 +34,7 @@ Prérequis : Docker avec Docker Compose v2. Rien d'autre.
 cd ~/dev/graphe-medias
 make build      # construit l'image du pipeline (≈ 1 min la première fois)
 make pipeline   # télécharge les sources, les vérifie, prépare les données (≈ 12 s)
-make test       # 58 tests
+make test       # 70 tests (+ 20 tests du site : make test-site)
 ```
 
 Sortie attendue de `make pipeline` (première exécution) :
@@ -79,6 +80,8 @@ config/params.yaml ──────────┴──► [referentiel] ─�
                                        │                  │──► data/output/liens.parquet
                                        │                  │──► data/output/journal_coaudience.json
                                   [attributs] ◄───────────┘──► data/output/attributs_medias.parquet
+                                  [familles] ◄── liens affichés ──► data/output/familles.parquet
+                                  [disposition] ◄─ liens affichés ─► data/output/disposition.parquet
                                        ▲
                      compute/bootstrap.py : les mêmes 1 000 tirages pour les deux étapes
 ```
@@ -174,7 +177,17 @@ Tous les indicateurs sont des moyennes pondérées sur une partie du public d'un
 | tf1 | 5,8 [5,7 ; 6,0] | 33 % | 45 % | −0,12 |
 | cnews | 6,7 [6,5 ; 6,9] | 23 % | 47 % | −0,13 |
 
-### 3.6 Le site : deux images
+### 3.6 `familles` et `disposition` : la carte
+
+**Fichiers :** [`pipeline/compute/familles.py`](../pipeline/compute/familles.py), [`pipeline/compute/disposition.py`](../pipeline/compute/disposition.py) · **Décisions :** [ADR-005](decisions/ADR-005-seuils-des-liens.md), [ADR-007](decisions/ADR-007-familles.md), [ADR-008](decisions/ADR-008-disposition.md)
+
+1. `coaudience` marque les **liens affichés** (`affiche`) : les 5 plus forts de chaque média, plus ceux au-dessus du lift de référence. Cela fait 623 liens sur 1 413.
+2. `familles` lance Leiden sur ces liens. Pour mesurer la stabilité, il refait le calcul sur 100 sous-échantillons et apparie les familles avec `apparier()` (algorithme hongrois). Le module applique ensuite RG-07 et calcule les médias « ponts ».
+3. `disposition` place les médias avec `forceatlas2()`, une implémentation numpy de l'algorithme de Gephi, à graine fixe, puis ramène les coordonnées dans [0, 1].
+
+`make exploration` produit en plus `familles.md` (36 configurations comparées), un aperçu `carte.svg` et un fichier `graphe_provisoire.gexf` pour Gephi.
+
+### 3.7 Le site : deux images
 
 **Fichiers :** [`docker/site.Dockerfile`](../docker/site.Dockerfile), [`docker/nginx.conf`](../docker/nginx.conf), [`site/`](../site/)
 
@@ -183,6 +196,8 @@ Tous les indicateurs sont des moyennes pondérées sur une partie du public d'un
 | `dev` | Vite avec rechargement à chaud ; Vitest, ESLint, Prettier | `make dev` → http://localhost:5173 |
 | `build` | `tsc`, build Vite, pré-compression gzip | (intermédiaire) |
 | `runtime` | nginx non root, ≈ 9 Mo, système de fichiers en lecture seule | `make site` → http://localhost:8080 |
+
+Le site a ses **jetons de design** ([`site/src/styles/jetons.css`](../site/src/styles/jetons.css), relevés dans les maquettes) et ses polices IBM Plex, hébergées sur le site. Tous ses **textes** sont dans [`site/src/i18n/fr.ts`](../site/src/i18n/fr.ts), y compris les formulations imposées : `phrasePositionnement()` (RG-20), `phraseLien()` (RG-22) et `mentionSource()` (RG-24). `npm run vocabulaire` refuse les formules interdites, comme « média de droite » ; une citation entre « … » reste permise.
 
 Les en-têtes de sécurité sont dans [`docker/nginx-entetes.conf`](../docker/nginx-entetes.conf), inclus dans **chaque** bloc `location`. nginx ignore les `add_header` du niveau supérieur dès qu'un bloc en déclare un. La CSP interdit toute source externe et tout script en ligne : la configuration Vite n'en produit pas (`assetsInlineLimit: 0`).
 
@@ -277,6 +292,6 @@ Les tests sur les données sont ignorés tant que le pipeline n'a pas tourné (`
 
 ## 8. La suite
 
-**Sprint 3 (26-30 octobre)** : familles de médias (Leiden, stabilité par sous-échantillons), disposition de la carte (ForceAtlas2), médias « ponts », jetons de design et textes de l'interface, CI du site (hadolint, Trivy). Jalon **J2** le 30 octobre : go / no go sur les familles.
+**Jalon J2** : la proposition est « go », sous condition du test H5 : faire nommer les 3 familles par 3 à 5 personnes extérieures ([J2-go-no-go.md](decisions/J2-go-no-go.md)).
 
-**Préalable :** trancher l'option de RG-05 ([ADR-005](decisions/ADR-005-seuils-des-liens.md)), dont dépendent les familles et la disposition. Détail des tâches dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).
+**Sprint 4 (2-6 novembre)** : base de propriété (rapprochement avec le référentiel, fichier de corrections), export `graph.json` et schéma JSON, fichiers téléchargeables, chargement Neo4j. Détail dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).

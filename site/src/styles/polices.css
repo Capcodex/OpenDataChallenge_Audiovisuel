@@ -1,0 +1,11 @@
+/*
+ * Polices IBM Plex, hébergées sur le site (licence SIL Open Font License 1.1, paquets @fontsource).
+ * Aucune requête vers Google Fonts : la CSP n'autorise que le domaine du site (ENF-11).
+ * Sous-ensemble latin seulement, graisses utilisées par les maquettes.
+ */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-sans/latin-700.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";

@@ -42,8 +42,10 @@ format:           ## Formatage du code
 		-v "$(CURDIR)/docs:/app/docs" graphe-medias-pipeline:dev \
 		sh -c "ruff format pipeline tests && ruff check --fix pipeline tests"
 
-exploration: fichiers-locaux      ## Rapport d'exploration des seuils (docs/exploration/seuils.md)
-	$(COMPOSE) run --rm -v ./docs:/app/docs pipeline python docs/exploration/seuils.py
+exploration: fichiers-locaux      ## Rapports d'exploration : seuils, familles, aperçu de la carte (docs/exploration/)
+	$(COMPOSE) run --rm -v ./docs:/app/docs pipeline sh -c \
+		"python docs/exploration/seuils.py && python docs/exploration/familles.py \
+		&& python docs/exploration/carte.py"
 
 shell: fichiers-locaux            ## Shell dans le conteneur
 	$(RUN) bash
@@ -61,8 +63,9 @@ site-stop:                        ## Arrêter les services du site
 test-site: fichiers-locaux        ## Tests Vitest du site
 	$(COMPOSE) run --rm site-dev npm test
 
-lint-site: fichiers-locaux        ## ESLint et Prettier sur le site
-	$(COMPOSE) run --rm site-dev npm run lint
+lint-site: fichiers-locaux        ## ESLint, Prettier et contrôle du vocabulaire (RG-20)
+	$(COMPOSE) run --rm -v ./docs:/app/docs:ro site-dev sh -c "npm run lint && \
+		npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md"
 
 clean-interim:    ## Supprimer les fichiers intermédiaires (force un recalcul complet)
 	rm -rf data/interim data/output data/.etat_pipeline.json

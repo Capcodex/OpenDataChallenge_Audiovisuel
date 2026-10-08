@@ -2,7 +2,7 @@
 
 *Source de la page « Méthode » du site (rédaction finale au sprint 7). Ce document est mis à jour à chaque modification d'un calcul ou d'un seuil. Les paramètres cités sont dans [`config/params.yaml`](../config/params.yaml).*
 
-État : **sprint 2**. Données, liens de co-audience et profils des publics. Les familles, la disposition de la carte, la propriété et les JT seront ajoutés aux sprints 3 à 5.
+État : **sprint 3**. Données, liens de co-audience, profils des publics, familles et disposition de la carte. La propriété et les JT seront ajoutés aux sprints 4 et 5.
 
 ---
 
@@ -60,7 +60,11 @@ Un lift proche de 1,6 indique donc surtout que les deux médias touchent des gro
 
 Les médias à très large audience ont des lifts mécaniquement bas : le lift ne peut pas dépasser `1 / part du public du média`, soit 1,8 pour TF1.
 
-*La règle d'affichage des liens sur la carte est en cours de décision ([ADR-005](decisions/ADR-005-seuils-des-liens.md)).*
+### 3.5 Les liens tracés sur la carte
+
+Tracer les 1 413 liens rendrait la carte illisible. La carte montre donc, pour chaque média, **ses 5 liens les plus forts** (`voisins_min_par_media`), plus **tous les liens nettement au-dessus du lift de référence** (borne basse > 1,57). En 2026, cela fait **623 liens**, et aucun média n'est isolé ([ADR-005](decisions/ADR-005-seuils-des-liens.md)).
+
+Les données téléchargeables contiennent les 1 413 liens, avec une colonne indiquant ceux qui sont tracés.
 
 ## 4. Le profil des publics
 
@@ -76,12 +80,34 @@ Pour chaque média affichable, on décrit les personnes qui le suivent ([ADR-006
 
 **Le positionnement politique décrit le public, pas le média.** Un public positionné à 6,7 en moyenne ne fait pas d'un média un « média de droite » (RG-20).
 
-## 5. Ce qui n'est jamais publié
+## 5. Les familles de médias
+
+Les couleurs de la carte correspondent à des **familles** : des groupes de médias plus liés entre eux qu'avec le reste. Personne ne les définit à l'avance. Elles sont détectées automatiquement par l'algorithme de Leiden, à partir des liens tracés sur la carte, chaque lien comptant selon le logarithme de son lift (RG-06).
+
+**Ces familles sont-elles solides ?** On refait tout le calcul sur 100 échantillons tirés au hasard (`sous_echantillons`). Pour chaque média, la **stabilité** est la part des échantillons où il reste dans sa famille. Les familles ne sont affichées que si au moins 80 % des médias ont une stabilité d'au moins 80 % (RG-07). Sinon, la carte s'affiche sans couleurs.
+
+En 2026 : **3 familles, 94 % des médias stables** ([ADR-007](decisions/ADR-007-familles.md)).
+
+| Famille | Médias | Caractéristique du public |
+|---|---|---|
+| 1 | 43 | Chaînes d'information, radios, presse nationale et magazines |
+| 2 | 15 | Grandes chaînes de télévision et leurs journaux télévisés ; public plus âgé (50 ans en moyenne) |
+| 3 | 10 | Médias en ligne et créateurs de contenu ; public jeune (34 ans en moyenne) |
+
+Un découpage plus fin, en 4 familles, n'est pas assez stable (75 %) : il n'est pas affiché.
+
+**Médias « ponts ».** Certains médias ont des liens dans plusieurs familles. Le **coefficient de participation** mesure cette répartition : 0 si tous les liens du média restent dans sa famille, davantage s'ils se partagent entre plusieurs. Les 10 médias au coefficient le plus élevé sont signalés comme « ponts » (`ponts_nombre`).
+
+## 6. La disposition de la carte
+
+La position des médias est calculée une fois pour toutes par l'algorithme ForceAtlas2, celui du logiciel Gephi. Les médias reliés s'attirent, d'autant plus que leur lift est élevé, et tous les médias se repoussent. Deux médias proches sur la carte partagent donc souvent leur public. **Les distances ne sont pas des mesures exactes** : seuls les liens et leur lift le sont. Le calcul part d'une position tirée avec une graine fixe : la carte est identique à chaque visite ([ADR-008](decisions/ADR-008-disposition.md)).
+
+## 7. Ce qui n'est jamais publié
 
 - Aucune réponse individuelle : les tables par répondant ne quittent pas le pipeline.
 - Aucun lien appuyé sur moins de 30 répondants communs, aucun indicateur de média sous 50 répondants, aucune confiance sous 50 réponses.
 
-## 6. Paramètres (édition 2026)
+## 8. Paramètres (édition 2026)
 
 | Paramètre | Valeur | Règle |
 |---|---|---|
@@ -94,4 +120,12 @@ Pour chaque média affichable, on décrit les personnes qui le suivent ([ADR-006
 | `bootstrap.iterations` | 1 000 | CdCT § 7.3 |
 | `bootstrap.niveau_confiance` | 95 % | |
 | `age_valeur_65_plus` | 74 ans | ADR-006 |
+| `voisins_min_par_media` | 5 liens tracés au minimum par média | ADR-005 |
+| `communautes.liens` | liens tracés | ADR-007 |
+| `communautes.poids` | log(lift) | RG-06, ADR-007 |
+| `communautes.resolution` | 0,6 | ADR-007 |
+| `communautes.sous_echantillons` | 100 | RG-07 |
+| `stabilite_noeud_min`, `part_noeuds_stables_min` | 80 %, 80 % | RG-07 |
+| `ponts_nombre` | 10 | ADR-007 |
+| `layout.iterations` | 2 000 | ADR-008 |
 | `seed` | 20261008 | Reproductibilité |

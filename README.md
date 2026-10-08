@@ -4,7 +4,7 @@ Graphe de proximité des médias français : quels médias partagent le même pu
 
 Le projet s'appuie sur des données publiques : le baromètre de l'Arcom « Les Français et l'information » (2026), les données de l'INA sur les journaux télévisés et la base « Médias français » du Monde diplomatique et d'Acrimed.
 
-> **État :** sprint 2 terminé (liens de co-audience, profils des publics, image du site). Le site n'est encore qu'un squelette : la carte arrive au sprint 5.
+> **État :** sprint 3 terminé (familles de médias, disposition de la carte, jetons de design, textes de l'interface). Le site n'est encore qu'un squelette : la carte arrive au sprint 5.
 
 ## Prérequis
 
@@ -30,14 +30,14 @@ Sans `make` : `docker compose run --rm pipeline [commande]`.
 | `python -m pipeline run --force` | Réexécute tout |
 | `python -m pipeline check` | Valide les sorties existantes (schémas) |
 
-Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `coaudience` → `attributs`.
+Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `coaudience` → `attributs` → `familles` → `disposition`.
 
 | Commande `make` | Effet |
 |---|---|
-| `make exploration` | Rapport sur les seuils des liens : `docs/exploration/seuils.md` |
+| `make exploration` | Rapports sur les seuils et les familles, aperçu de la carte : `docs/exploration/` |
 | `make dev` | Site en développement (Vite, rechargement à chaud) : http://localhost:5173 |
 | `make site` / `make site-stop` | Site de production (nginx, lecture seule) : http://localhost:8080 |
-| `make test-site`, `make lint-site` | Tests Vitest ; ESLint et Prettier |
+| `make test-site`, `make lint-site` | Tests Vitest ; ESLint, Prettier et contrôle du vocabulaire (RG-20) |
 | `make format` | Formatage Python (ruff) |
 
 ## Organisation
@@ -67,6 +67,9 @@ site/            site web : Vite + TypeScript + Preact (squelette), public/ (don
 | `data/output/liens.parquet` | Liens de co-audience retenus (RG-04, RG-05) : lift, intervalle, effectif commun | Agrégé |
 | `data/output/attributs_medias.parquet` | Profil du public de chaque média : politique, âge, confiance, avec intervalles | Agrégé |
 | `data/output/journal_coaudience.json` | Paires testées, gardées, rejetées par motif ; lift de référence | Agrégé |
+| `data/output/familles.parquet` | Famille, stabilité, intermédiarité, participation, pont | Agrégé |
+| `data/output/disposition.parquet` | Position de chaque média sur la carte | Agrégé |
+| `data/output/journal_familles.json` | Réglages, stabilité, familles affichées ou non (RG-07) | Agrégé |
 
 La méthode de calcul est décrite dans [docs/methode.md](docs/methode.md) ; les sources et la définition de chaque colonne dans [docs/donnees.md](docs/donnees.md).
 

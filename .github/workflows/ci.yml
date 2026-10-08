@@ -9,7 +9,24 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Outils de contrôle, figés par empreinte comme les images du projet (CdC technique § 5.5).
+env:
+  TRIVY: aquasec/trivy:0.67.2@sha256:e2b22eac59c02003d8749f5b8d9bd073b62e30fefaef5b7c8371204e0a4b0c08
+  HADOLINT: hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
+
 jobs:
+  dockerfiles:
+    name: Lint des Dockerfiles (hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: hadolint
+        run: |
+          for f in docker/*.Dockerfile; do
+            echo "== $f"
+            docker run --rm -i "$HADOLINT" < "$f"
+          done
+
   pipeline:
     name: Pipeline de données
     runs-on: ubuntu-latest
@@ -33,6 +50,12 @@ jobs:
           taille=$(docker run --rm --entrypoint sh graphe-medias-pipeline:dev -c "du -sxm / 2>/dev/null | cut -f1")
           echo "Taille réelle de l'image : ${taille} Mo"
           test "$taille" -lt 1024
+
+      # Échec si une faille critique corrigeable est détectée (CdC technique § 12.3).
+      - name: Analyse de vulnérabilités (Trivy)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" image \
+            --severity CRITICAL --ignore-unfixed --exit-code 1 graphe-medias-pipeline:dev
 
       - name: "Préparer les dossiers montés (utilisateur du conteneur : uid 1000)"
         run: mkdir -p data site/public && chmod -R a+rwX data site/public
@@ -80,6 +103,13 @@ jobs:
       - name: Tests Vitest, lint et build
         run: docker compose run --rm site-dev sh -c "npm test && npm run lint && npm run build"
 
+      # RG-20 : un texte de l'interface ou de la méthode contenant une formule interdite fait
+      # échouer la CI.
+      - name: Contrôle du vocabulaire
+        run: |
+          docker compose run --rm -v ./docs:/app/docs:ro site-dev \
+            npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md
+
       - name: Construire l'image de production du site
         uses: docker/build-push-action@v6
         with:
@@ -89,6 +119,11 @@ jobs:
           tags: graphe-medias-site:dev
           load: true
           cache-from: type=gha,scope=site
+
+      - name: Analyse de vulnérabilités (Trivy)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" image \
+            --severity CRITICAL --ignore-unfixed --exit-code 1 graphe-medias-site:dev
 
       - name: Taille de l'image (< 50 Mo, CdC technique § 5.5)
         run: |

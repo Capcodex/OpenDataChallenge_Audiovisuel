@@ -1,6 +1,6 @@
 # ADR-006 · Indicateurs des publics : âge, positionnement politique, confiance
 
-- **Statut :** acceptée · définition de l'indicateur de confiance **à confirmer** par le porteur du projet
+- **Statut :** acceptée · indicateur de confiance (part de « source de référence ») confirmé par le porteur du projet le 8 octobre 2026
 - **Date :** 8 octobre 2026
 - **Références :** E0-06, T-021 à T-023, RG-03, RG-11, RG-13, RG-14, CdC technique § 7.3 et § 8.1
 

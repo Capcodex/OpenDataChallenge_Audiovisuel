@@ -1,6 +1,6 @@
 # Données du projet : sources et dictionnaire
 
-*État : fin du sprint 2 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
+*État : fin du sprint 3 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
 
 Ce document recense **les sources utilisées** (section 1) et **la définition de chaque donnée** manipulée par le projet : variables lues dans les sources (section 2), fichiers de configuration (section 3) et tables produites par le pipeline (sections 4 et 5). La méthode de calcul est détaillée dans [methode.md](methode.md), les licences dans [LICENSE-DATA.md](../LICENSE-DATA.md).
 
@@ -140,7 +140,7 @@ Une ligne par média (99 en 2026). Maintenu à la main, validé à chaque exécu
 
 ### 3.3 Paramètres : `config/params.yaml`
 
-Liste et valeurs dans [methode.md § 6](methode.md#6-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
+Liste et valeurs dans [methode.md § 8](methode.md#8-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
 
 ---
 
@@ -180,7 +180,7 @@ Une ligne par répondant de la base (2 939 lignes), dans le même ordre que `rep
 
 ### 4.4 `paires.parquet` · étape `coaudience`
 
-Toutes les paires de médias affichables, **avant** filtrage (2 278 lignes). Mêmes colonnes que `liens.parquet` (§ 5.2). Contient des paires à faible effectif commun : sert uniquement à l'exploration des seuils.
+Toutes les paires de médias affichables, **avant** filtrage (2 278 lignes). Mêmes colonnes que `liens.parquet` (§ 5.2), sauf `affiche`. Contient des paires à faible effectif commun : sert uniquement à l'exploration des seuils.
 
 ---
 
@@ -211,6 +211,7 @@ Un lien de co-audience retenu par ligne (1 413 lignes en 2026). Clé : (`source`
 | `lift_bas` | float64, > 0 | Borne basse de l'intervalle de confiance à 95 % (quantile 2,5 % sur 1 000 tirages bootstrap) ; > 1 pour un lien retenu | RG-05 |
 | `lift_haut` | float64, > 0 | Borne haute (quantile 97,5 %) | — |
 | `n_communs` | int64, ≥ 30 | Nombre de répondants (non pondéré) qui suivent les deux médias | RG-04 |
+| `affiche` | bool | Lien tracé sur la carte : l'un des 5 plus forts de l'un des deux médias, ou borne basse supérieure au lift de référence (623 liens en 2026) | ADR-005 |
 
 ### 5.3 `attributs_medias.parquet` · étape `attributs`
 
@@ -254,6 +255,45 @@ Une ligne par colonne de confiance du baromètre (90 lignes), pour relecture.
 | `medias_relies` | entier | Médias ayant au moins un lien |
 | `iterations_bootstrap` | entier | Nombre de tirages |
 | `lift_reference_intensite` | réel | Lift attendu du seul fait de l'intensité de consommation, `E[k²] / E[k]²` ([ADR-005](decisions/ADR-005-seuils-des-liens.md)) |
+| `liens_affiches` | entier | Liens tracés sur la carte (`affiche` vrai) |
+
+### 5.6 `familles.parquet` · étape `familles`
+
+Une ligne par média affichable (68 lignes). Clé : `media_id` ([ADR-007](decisions/ADR-007-familles.md)).
+
+| Colonne | Type | Définition | Règle |
+|---|---|---|---|
+| `media_id` | str | Identifiant du média | — |
+| `famille` | int64, ≥ 1 | Famille détectée par Leiden ; 1 = la plus grande | RG-06 |
+| `stabilite` | float64, 0 à 1 | Part des 100 sous-échantillons où le média reste dans sa famille | RG-07 |
+| `intermediarite` | float64, 0 à 1 | Intermédiarité pondérée (distance = 1 / lift), normalisée | E1-05 |
+| `participation` | float64, 0 à 1 | Coefficient de participation : 0 si tous les liens restent dans la famille | E1-05 |
+| `pont` | bool | Parmi les 10 médias à la participation la plus forte | E1-05 |
+
+### 5.7 `journal_familles.json` · étape `familles`
+
+| Clé | Type | Définition |
+|---|---|---|
+| `liens`, `liens_utilises` | texte, entier | Ensemble de liens utilisé (`affiches` ou `retenus`) et leur nombre |
+| `resolution`, `poids` | réel, texte | Réglages de Leiden |
+| `sous_echantillons` | entier | Nombre de sous-échantillons de stabilité |
+| `familles`, `tailles` | entier, objet | Nombre de familles et nombre de médias par famille |
+| `ari_moyen` | réel | Indice de Rand ajusté moyen entre la référence et les sous-échantillons |
+| `part_medias_stables` | réel, 0 à 1 | Part des médias dont la stabilité atteint `stabilite_noeud_min` |
+| `familles_affichees` | booléen | RG-07 : `part_medias_stables` ≥ `part_noeuds_stables_min` |
+
+### 5.8 `disposition.parquet` · étape `disposition`
+
+Une ligne par média affichable (68 lignes). Clé : `media_id` ([ADR-008](decisions/ADR-008-disposition.md)).
+
+| Colonne | Type | Définition |
+|---|---|---|
+| `media_id` | str | Identifiant du média |
+| `x`, `y` | float64, 0 à 1 | Position sur la carte (ForceAtlas2, graine fixe), proportions conservées ; `y` croît vers le bas |
+
+### 5.9 `graphe_provisoire.gexf` · `make exploration` (hors pipeline)
+
+Graphe complet pour Gephi (jalon J2). Nœuds : médias affichables avec `label`, `type`, `n_repondants`, `famille`, `stabilite`, `pol_moy`, `age_moy` et position. Arêtes : tous les liens retenus avec `weight` (lift), `lift_bas`, `n_communs`, `affiche`. Remplacé au sprint 4 par l'export `graphe.gexf`.
 
 ---
 
@@ -261,9 +301,7 @@ Une ligne par colonne de confiance du baromètre (90 lignes), pour relecture.
 
 | Table | Sprint | Colonnes prévues (CdCT § 8.1) |
 |---|---|---|
-| `communities` | S3 | `media_id`, `community_id`, `stability` |
-| `community_meta` | S3 | `community_id`, `label`, `color`, `size` |
-| `layout` | S3 | `media_id`, `x`, `y` (normalisés dans [0, 1]) |
+| `community_meta` | S4 | `community_id`, `label` (noms issus du test H5), `color`, `size` |
 | `ownership` | S4 | `media_id`, `owner_id`, `group`, `owner_name`, `owner_type`, `share`, `source`, `as_of` |
 | `jt_profiles` | S5 | `channel`, `year`, `rubric`, `n_subjects`, `duration_s`, `share_subjects`, `share_duration` |
 | `jt_similarity` | S5 | `channel_a`, `channel_b`, `period`, `js_similarity`, `sync_corr` |

@@ -15,7 +15,7 @@ import pandera.pandas as pa
 
 from pipeline import ingest, schemas
 from pipeline.chemins import Chemins
-from pipeline.compute import attributs, coaudience
+from pipeline.compute import attributs, coaudience, disposition, familles
 from pipeline.prepare import arcom, referentiel
 
 
@@ -70,6 +70,18 @@ ETAPES: list[Etape] = [
         "Profil des publics : positionnement politique, âge, confiance",
         attributs,
         {"output/attributs_medias.parquet": schemas.ATTRIBUTS_MEDIAS},
+    ),
+    Etape(
+        "familles",
+        "Familles de médias (Leiden), stabilité (RG-07), médias ponts",
+        familles,
+        {"output/familles.parquet": schemas.FAMILLES},
+    ),
+    Etape(
+        "disposition",
+        "Disposition de la carte (ForceAtlas2, graine fixe)",
+        disposition,
+        {"output/disposition.parquet": schemas.DISPOSITION},
     ),
 ]
 

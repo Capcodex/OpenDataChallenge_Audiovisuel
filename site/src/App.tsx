@@ -1,10 +1,12 @@
-// Squelette du sprint 2 : la carte (Sigma.js) arrive au sprint 5, les textes passeront dans
-// i18n/fr.ts au sprint 3 (T-039).
+import { fr } from "./i18n/fr";
+
+// Squelette : la carte (Sigma.js) arrive au sprint 5. Tous les textes viennent de i18n/fr.ts.
 export function App() {
   return (
-    <main>
-      <h1>Graphe des médias français</h1>
-      <p>Carte en préparation.</p>
+    <main class="squelette">
+      <h1>{fr.titrePage}</h1>
+      <p>{fr.bandeau}</p>
+      <p>{fr.etats.chargement}</p>
     </main>
   );
 }
