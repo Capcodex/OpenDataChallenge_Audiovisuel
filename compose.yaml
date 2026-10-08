@@ -1,0 +1,51 @@
+name: graphe-medias
+
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: docker/pipeline.Dockerfile
+    image: graphe-medias-pipeline:dev
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data                 # données brutes et intermédiaires : jamais dans l'image
+      - ./site/public:/app/site/public   # sorties agrégées destinées au site
+      # Code monté en développement : pas besoin de reconstruire l'image à chaque modification.
+      - ./pipeline:/app/pipeline:ro
+      - ./tests:/app/tests:ro
+    command: ["python", "-m", "pipeline", "run"]
+
+  # Serveur de développement Vite (rechargement à chaud) : http://localhost:5173
+  site-dev:
+    build:
+      context: .
+      dockerfile: docker/site.Dockerfile
+      target: dev
+    image: graphe-medias-site-dev:dev
+    volumes:
+      - ./site:/app/site
+      - /app/site/node_modules           # dépendances de l'image, pas celles de l'hôte
+    ports:
+      - "127.0.0.1:5173:5173"
+
+  # Site de production (nginx non privilégié) : http://localhost:8080
+  site:
+    build:
+      context: .
+      dockerfile: docker/site.Dockerfile
+      target: runtime
+    image: graphe-medias-site:dev
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      start_interval: 1s

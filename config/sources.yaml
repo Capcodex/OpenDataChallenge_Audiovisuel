@@ -1,0 +1,73 @@
+# Sources de données du pipeline (EF-FT-01, CdC technique § 6.2 étape 1).
+#
+# Chaque fichier est téléchargé à son adresse figée puis vérifié par son empreinte sha256.
+# Si un producteur publie une nouvelle version, l'étape « ingest » échoue volontairement :
+# mettre à jour l'adresse et l'empreinte ici, en connaissance de cause, dans une pull request.
+#
+# Adresses data.gouv.fr : https://www.data.gouv.fr/fr/datasets/r/<identifiant de ressource>
+# (lien stable qui redirige vers le fichier courant de la ressource).
+
+sources:
+
+  # --- Arcom, « Les Français et l'information », 2e édition (terrain juin-juillet 2025) ---
+  # Jeu : https://www.data.gouv.fr/fr/datasets/les-francais-et-linformation-barometre/
+  # Licence Ouverte v2.0 (Etalab)
+  - id: arcom_2026_base
+    url: https://www.data.gouv.fr/fr/datasets/r/8e499093-0d03-45ad-a5a9-1edb2d0a243f
+    fichier: raw/arcom/2026-base-anonymisee-complete.csv
+    sha256: 849eb1840dba4d1b0dfbcc7ac658aca6540510b835865db209ca9ab605450353
+  - id: arcom_2026_dictionnaire
+    url: https://www.data.gouv.fr/fr/datasets/r/3fd85890-6af6-4d56-8f5a-60da23c9fe48
+    fichier: raw/arcom/2026-datamap.xlsx
+    sha256: 34e184383e5be2d8f7c5ebb42023de47192c7e832e2a02014e13e654b42062f7
+  - id: arcom_2026_guide
+    url: https://www.data.gouv.fr/fr/datasets/r/27b0aac6-d4d8-4785-ac8c-fd0a550973db
+    fichier: raw/arcom/2026-guide-utilisation.pdf
+    sha256: 035de9d81e276f0d842ee8ea8ab58d568ba3527aa08cfbae22406c5dba2b45db
+
+  # --- INA, sujets des JT du soir 2000-2020 (module JT, sprint 5) ---
+  # Jeu : https://www.data.gouv.fr/fr/datasets/classement-thematique-des-sujets-de-journaux-televises-janvier-2000-decembre-2020/
+  # Licence Ouverte v1.0 (Etalab)
+  - id: ina_jt_2000_2020
+    url: https://www.data.gouv.fr/fr/datasets/r/9c90780e-7975-4b29-8ece-e2d3f07ac308
+    fichier: raw/ina/jt-quotidien-2000-2020.csv
+    sha256: a947e5ff85bb55fc48f36afbf435ea59b57492f518e52c7909eabab8bb41236b
+
+  # --- INA / CSA, temps de parole F/H (éditeur et groupe des chaînes et radios, sprint 4) ---
+  # Licence Ouverte v1.0 (Etalab)
+  - id: ina_csa_chaines
+    url: https://www.data.gouv.fr/fr/datasets/r/756365eb-a8ae-42b1-8345-76fda5dde110
+    fichier: raw/ina/csa-parole-femmes-chaines.csv
+    sha256: d3782ce1f03c25cd053e424b4f6816a64c22622f1420c51f6a9ba2719d934ba8
+
+  # --- Le Monde diplomatique / Acrimed, « Médias français : qui possède quoi » (sprint 4) ---
+  # Dépôt : https://github.com/mdiplo/Medias_francais — licence ODC-By v1.0 (attribution obligatoire)
+  # Figé au commit du 17 décembre 2024 (voir ADR-003).
+  - id: mdiplo_medias
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/medias.tsv
+    fichier: raw/proprietes/medias.tsv
+    sha256: ac8aa64c2e193d2da4f0adf0c344442c7390f6cf0d2878ff512e84b0ee587859
+  - id: mdiplo_organisations
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/organisations.tsv
+    fichier: raw/proprietes/organisations.tsv
+    sha256: ab7ce005d17b363c1695168e8d8dc40f98bcaf8033ed32dfc3bf6816c129ab82
+  - id: mdiplo_personnes
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/personnes.tsv
+    fichier: raw/proprietes/personnes.tsv
+    sha256: 14e5f368487501eb5862b8245145f0a9493c87426fc0d95a70a6554df9ff78ca
+  - id: mdiplo_organisation_media
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/organisation-media.tsv
+    fichier: raw/proprietes/organisation-media.tsv
+    sha256: 86291fe28be2814ce903fc65733903c93e4a922306878bb1779fa6912f6d8ea9
+  - id: mdiplo_organisation_organisation
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/organisation-organisation.tsv
+    fichier: raw/proprietes/organisation-organisation.tsv
+    sha256: 57f7a23636b347e5305ca87913dc8a602ce79aad9dda64eda3cac04c5b08c5b6
+  - id: mdiplo_personne_media
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/personne-media.tsv
+    fichier: raw/proprietes/personne-media.tsv
+    sha256: 92ff39b67f951ee3b0ac60761ad436bbd778b55a418e4dab128e1a67f5495f17
+  - id: mdiplo_personne_organisation
+    url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/personne-organisation.tsv
+    fichier: raw/proprietes/personne-organisation.tsv
+    sha256: d80f55209a70012a1c65778a6d23d1561b6bcd345f1323ee1307ef61c9882001

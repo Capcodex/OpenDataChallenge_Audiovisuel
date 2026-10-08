@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    name: Pipeline de données
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construire l'image du pipeline
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/pipeline.Dockerfile
+          tags: graphe-medias-pipeline:dev
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Taille de l'image (< 1 Go, CdC technique § 5.5)
+        run: |
+          taille=$(docker run --rm --entrypoint sh graphe-medias-pipeline:dev -c "du -sxm / 2>/dev/null | cut -f1")
+          echo "Taille réelle de l'image : ${taille} Mo"
+          test "$taille" -lt 1024
+
+      - name: "Préparer les dossiers montés (utilisateur du conteneur : uid 1000)"
+        run: mkdir -p data site/public && chmod -R a+rwX data site/public
+
+      - name: Lint et formatage
+        run: |
+          docker compose run --rm pipeline ruff check pipeline tests
+          docker compose run --rm pipeline ruff format --check pipeline tests
+
+      - name: Tests unitaires
+        run: docker compose run --rm pipeline pytest -m "not data"
+
+      - name: Pipeline (téléchargement des sources et calculs)
+        run: docker compose run --rm pipeline
+
+      - name: Tests sur les données réelles
+        run: docker compose run --rm pipeline pytest -m data
+
+      - name: Contrôles des sorties
+        run: docker compose run --rm pipeline python -m pipeline check
+
+  site:
+    name: Site web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construire l'image de développement du site
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/site.Dockerfile
+          target: dev
+          tags: graphe-medias-site-dev:dev
+          load: true
+          cache-from: type=gha,scope=site
+          cache-to: type=gha,mode=max,scope=site
+
+      # Le dossier site/ est monté dans le conteneur : uid 1000 doit pouvoir y écrire (Vite, Vitest).
+      - name: Préparer le dossier monté
+        run: chmod -R a+rwX site
+
+      - name: Tests Vitest, lint et build
+        run: docker compose run --rm site-dev sh -c "npm test && npm run lint && npm run build"
+
+      - name: Construire l'image de production du site
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/site.Dockerfile
+          target: runtime
+          tags: graphe-medias-site:dev
+          load: true
+          cache-from: type=gha,scope=site
+
+      - name: Taille de l'image (< 50 Mo, CdC technique § 5.5)
+        run: |
+          taille=$(docker image inspect graphe-medias-site:dev --format '{{.Size}}')
+          echo "Taille de l'image : $((taille / 1024 / 1024)) Mo"
+          test "$taille" -lt $((50 * 1024 * 1024))
+
+      - name: Démarrage, healthcheck et en-têtes de sécurité
+        run: |
+          docker compose up --no-build --wait --wait-timeout 10 site
+          curl -sI http://localhost:8080/ | tee entetes.txt
+          grep -qi "^content-security-policy: default-src 'self'" entetes.txt
+          grep -qi "^x-content-type-options: nosniff" entetes.txt
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/absente)" = 404
+          docker compose down

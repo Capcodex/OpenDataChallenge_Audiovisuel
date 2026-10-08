@@ -1,0 +1,17 @@
+# Aucune donnée individuelle dans les images (ENF-09) : data/ est monté en volume.
+# site/public/data et site/public/telechargements ne contiennent que des agrégats destinés au
+# site : ils entrent dans l'image « site » (CdC technique § 4 et § 12.3).
+data/
+
+.git/
+.github/
+.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+site/node_modules/
+site/dist/
+docs/
+*.md
+!README.md
+.env

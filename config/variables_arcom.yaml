@@ -1,0 +1,200 @@
+# Correspondance entre les questions du baromètre Arcom 2026 et le référentiel des médias
+# (E0-01, E0-03, CdC technique § 6.3).
+#
+# Principe : seuls les codes listés sous « medias » deviennent des médias. Tous les autres codes
+# (sous-totaux « ST … », « Rien de tout cela », « Non concerné », « Youtube », « Bouche à oreilles »,
+# « Nombre Moyen »…) sont ignorés (RG-12). Pour chaque code listé, le pipeline vérifie que le
+# libellé du dictionnaire correspond bien au média (colonne « libelles_arcom » de medias.csv) :
+# une nouvelle édition qui renumérote les codes fait donc échouer le pipeline au lieu de produire
+# des résultats faux.
+
+edition: "2026"
+
+sources:
+  base: arcom_2026_base
+  dictionnaire: arcom_2026_dictionnaire
+
+colonnes:
+  identifiant: RECORD2025
+  poids: POIDS            # le guide parle de « POIDS03 » ; la colonne s'appelle « POIDS » en 2026
+
+# Répondants interrogés sur les médias : personnes intéressées par l'information générale
+# (87 % de l'échantillon selon le guide de l'Arcom). Un répondant est dans la base s'il a au
+# moins une réponse à cette question.
+question_base: SOURCES1AR_B1_R2_R
+
+questions:
+
+  - variable: SOURCES1AR_B1_R2_R      # Radio : marques consultées régulièrement
+    medias:
+      3: europe-1
+      4: rmc
+      5: rtl
+      6: radio-classique
+      7: bfm-business
+      8: sud-radio
+      10: ici
+      11: france-inter
+      12: franceinfo-radio
+      13: france-culture
+      14: rfi
+      15: radio-locale
+      16: autre-radio
+      17: cherie-fm
+      18: europe-2
+      19: france-musique
+      20: fun-radio
+      21: nostalgie
+      22: nrj
+      23: rfm
+      24: rtl2
+      25: skyrock
+
+  - variable: SOURCES1BR_B2_R2_R      # Journaux
+    medias:
+      2: le-monde
+      3: le-parisien
+      4: le-figaro
+      5: les-echos
+      6: l-equipe
+      7: la-croix
+      8: liberation
+      9: l-humanite
+      10: mediapart
+      11: huffpost
+      12: journal-regional
+      13: journal-dimanche
+      14: journal-satirique
+      15: quotidien-gratuit
+      16: autre-journal
+
+  - variable: SOURCES1CR_B3_R3_R      # Magazines, revues
+    medias:
+      2: telerama
+      3: m-le-mag
+      4: le-point
+      5: l-obs
+      6: l-express
+      7: figaro-magazine
+      8: courrier-international
+      9: marianne
+      10: paris-match
+      11: valeurs-actuelles
+      12: presse-feminine
+      13: presse-people
+      14: presse-eco
+      15: presse-internationale
+      16: autre-magazine
+
+  - variable: SOURCES1DR_B4_R3        # Chaînes de télévision
+    medias:
+      3: tf1
+      4: m6
+      5: tmc
+      6: rmc-story
+      7: c8
+      8: canal-plus
+      10: france-2
+      11: france-3
+      12: france-5
+      13: arte
+      14: autre-chaine-tv
+      15: tv-locale
+
+  - variable: SOURCES1ER_B4_R2        # Chaînes d'information
+    medias:
+      2: franceinfo-tv
+      3: lci
+      4: bfmtv
+      5: cnews
+      6: france-24
+      7: chaines-info-internationales
+      8: autre-chaine-info-internationale
+
+  - variable: SOURCES1FR_R2_R         # Réseaux sociaux et plateformes
+    # Question non posée aux 143 répondants interrogés par téléphone (personnes n'utilisant pas
+    # internet, PAGE_R_2 = 2). Pour eux, une réponse absente signifie « ne suit pas ce média ».
+    absence_vaut_non: true
+    medias:
+      2: blast
+      3: atlantico
+      4: rue89
+      5: slate
+      6: linternaute
+      7: konbini
+      8: loopsider
+      9: brut
+      10: aj-plus
+      11: frontieres
+      12: le-crayon
+      13: hugodecrypte
+      14: samuel-etienne
+      15: jean-massiet
+      16: gaspard-g
+      17: salome-saque
+      20: autre-createur
+      21: autre-personnalite
+
+  - variable: TV2AR_R                 # Journaux télévisés regardés régulièrement
+    medias:
+      4: jt-tf1-20h
+      5: jt-france2-20h
+      6: jt-france3-1920
+      7: jt-m6-1945
+      8: jt-tf1-13h
+      9: jt-france2-13h
+      10: jt-france3-12h
+      11: jt-m6-1245
+      12: jt-arte
+      13: autre-jt
+
+# Niveau de confiance accordé à chaque média (E0-03). Question posée aux personnes qui
+# consomment le média. Les 90 colonnes SOURCES1TER_R2_1 … _90 suivent l'ordre de la liste
+# « C_SOURCES1TER_R2 » du dictionnaire ; chaque colonne est rattachée à un média en comparant
+# son libellé à la colonne « libelles_arcom » de medias.csv.
+confiance:
+  variable: SOURCES1TER_R2
+  liste_colonnes: C_SOURCES1TER_R2
+  niveaux:
+    1: reference          # « Une source de référence »
+    2: complementaire     # « Une source complémentaire »
+    3: precaution         # « Une source à prendre avec précaution »
+  # Médias ultramarins : hors périmètre de la V1 (pas de question « médias suivis » équivalente).
+  ignorer: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+  # Libellés ambigus (« Un autre journal » apparaît deux fois dans la liste).
+  forcer:
+    40: autre-journal
+    55: autre-magazine
+
+# Profil des répondants, pour les attributs des publics (E0-06, RG-13). Comme pour les médias,
+# chaque code est vérifié contre le libellé du dictionnaire.
+profil:
+  # Âge : uniquement disponible par classes (pas d'âge exact dans la base anonymisée).
+  # bornes = [âge minimal, âge maximal] inclus ; null = pas de borne haute.
+  age:
+    variable: RS2C_RECODE_AGE
+    classes:
+      1: { libelle: "15-17 ans", bornes: [15, 17] }
+      2: { libelle: "18-24 ans", bornes: [18, 24] }
+      3: { libelle: "25-34 ans", bornes: [25, 34] }
+      4: { libelle: "35-49 ans", bornes: [35, 49] }
+      5: { libelle: "50-64 ans", bornes: [50, 64] }
+      6: { libelle: "65 ans et plus", bornes: [65, null] }
+  # Orientation politique, échelle de 0 (très à gauche) à 10 (très à droite). Question à colonnes
+  # multiples : la 1re colonne contient le sous-total (« ST Gauche »…), la 2e la note détaillée.
+  # La note 5 n'a pas de code détaillé : seul le sous-total « ST Centre » la porte. Les autres
+  # sous-totaux sont ignorés au profit de la note détaillée. Aucune réponse = non-réponse.
+  politique:
+    variable: NOU1_R1
+    codes:
+      2:  { libelle: "0 (Très à gauche)", valeur: 0 }
+      3:  { libelle: "1", valeur: 1 }
+      5:  { libelle: "2", valeur: 2 }
+      6:  { libelle: "3", valeur: 3 }
+      7:  { libelle: "4", valeur: 4 }
+      8:  { libelle: "ST Centre", valeur: 5 }
+      10: { libelle: "6", valeur: 6 }
+      11: { libelle: "7", valeur: 7 }
+      12: { libelle: "8", valeur: 8 }
+      14: { libelle: "9", valeur: 9 }
+      15: { libelle: "10 (Très à droite)", valeur: 10 }

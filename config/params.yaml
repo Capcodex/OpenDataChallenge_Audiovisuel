@@ -1,0 +1,39 @@
+# Paramètres du pipeline (RG-08). Tous les seuils sont publiés dans la page « Méthode »
+# (source : docs/methode.md). Chargés et validés par pipeline/config.py : un paramètre absent,
+# inconnu ou hors plage fait échouer le pipeline.
+
+edition: "2026"
+seed: 20261008
+
+seuils:
+  media_affichable_min: 50         # RG-01 : répondants (non pondérés) qui suivent le média
+  chiffre_fragile_sous: 100        # RG-03
+  lien_effectif_commun_min: 30     # RG-04 : répondants (non pondérés) qui suivent les deux médias
+  lien_lift_borne_basse_min: 1.0   # RG-05 : borne basse de l'intervalle strictement supérieure
+  confiance_effectif_min: 50       # RG-14 : réponses de confiance pour publier l'indicateur (ADR-006)
+  ecart_effectif_min_par_bord: 30  # écart gauche/droite : réponses minimales de chaque côté (ADR-006)
+
+bootstrap:
+  iterations: 1000
+  niveau_confiance: 0.95
+
+attributs:
+  # Âge connu par classes seulement (RS2C_RECODE_AGE) : l'âge moyen est approché par le centre de
+  # chaque classe. La classe « 65 ans et plus » n'a pas de borne haute : valeur conventionnelle
+  # (ADR-006).
+  age_valeur_65_plus: 74.0
+  # Positionnement politique (échelle 0-10) : bornes des « bords » pour l'écart de confiance.
+  gauche_max: 4                    # 0 à 4
+  droite_min: 6                    # 6 à 10
+
+# Utilisés à partir du sprint 3.
+communautes:
+  algorithme: leiden
+  resolution: 1.0
+  sous_echantillons: 100
+  stabilite_noeud_min: 0.80        # RG-07
+  part_noeuds_stables_min: 0.80    # RG-07
+
+layout:
+  algorithme: forceatlas2
+  iterations: 2000

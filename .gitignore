@@ -1,0 +1,21 @@
+# Données brutes et intermédiaires : téléchargeables, et contiennent des réponses individuelles.
+data/
+
+# Environnement
+.env
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Front-end
+site/node_modules/
+site/dist/
+
+# Système
+.DS_Store

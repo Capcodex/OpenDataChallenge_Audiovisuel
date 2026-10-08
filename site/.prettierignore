@@ -1,0 +1,5 @@
+dist/
+node_modules/
+public/data/
+public/telechargements/
+package-lock.json
