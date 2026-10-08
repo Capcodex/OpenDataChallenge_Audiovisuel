@@ -26,13 +26,23 @@ attributs:
   gauche_max: 4                    # 0 à 4
   droite_min: 6                    # 6 à 10
 
-# Utilisés à partir du sprint 3.
+# Liens affichés sur la carte (ADR-005, option C) : les données gardent tous les liens retenus
+# (RG-04, RG-05) ; la carte montre, pour chaque média, ses liens les plus forts et tous les liens
+# dont la borne basse dépasse le lift de référence dû à l'intensité de consommation.
+affichage:
+  voisins_min_par_media: 5
+
+# Familles (ADR-007) : calculées sur les liens affichés ; sur tous les liens retenus, aucune
+# partition en familles de taille utile ne respecte RG-07 (docs/exploration/familles.md).
 communautes:
   algorithme: leiden
-  resolution: 1.0
+  liens: affiches                  # affiches ou retenus
+  poids: log_lift                  # log_lift ou lift
+  resolution: 0.6
   sous_echantillons: 100
   stabilite_noeud_min: 0.80        # RG-07
   part_noeuds_stables_min: 0.80    # RG-07
+  ponts_nombre: 10                 # médias « ponts » : les N premiers par coefficient de participation
 
 layout:
   algorithme: forceatlas2

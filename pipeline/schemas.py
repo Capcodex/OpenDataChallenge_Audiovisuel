@@ -59,6 +59,7 @@ LIENS = pa.DataFrameSchema(
         "lift_bas": pa.Column("float64", pa.Check.gt(0)),
         "lift_haut": pa.Column("float64", pa.Check.gt(0)),
         "n_communs": pa.Column("int64", pa.Check.ge(1)),
+        "affiche": pa.Column(bool),
     },
     checks=[
         pa.Check(lambda d: d["source"] < d["cible"], error="source < cible"),
@@ -123,4 +124,27 @@ ATTRIBUTS_MEDIAS = pa.DataFrameSchema(
     ],
     strict=True,
     name="attributs_medias",
+)
+
+FAMILLES = pa.DataFrameSchema(
+    {
+        "media_id": pa.Column(str, unique=True),
+        "famille": pa.Column("int64", pa.Check.ge(1)),
+        "stabilite": _part(),
+        "intermediarite": _part(),
+        "participation": _part(),
+        "pont": pa.Column(bool),
+    },
+    strict=True,
+    name="familles",
+)
+
+DISPOSITION = pa.DataFrameSchema(
+    {
+        "media_id": pa.Column(str, unique=True),
+        "x": _part(),
+        "y": _part(),
+    },
+    strict=True,
+    name="disposition",
 )

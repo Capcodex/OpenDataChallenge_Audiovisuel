@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Projet** | Graphe des médias français |
-| **Version du document** | 0.2 — fin du sprint 2 |
+| **Version du document** | 0.3 — fin du sprint 3 |
 | **Date** | 8 octobre 2026 |
 | **Auteur** | Alexandre Masson |
 | **Statut** | En construction : complété à chaque sprint |
@@ -80,7 +80,7 @@ Les documents de conception sont dans le dossier parent `Data Viz/`.
 
 | # | Principe | Statut |
 |---|---|---|
-| A1 | **Tout est calculé à l'avance** : liens, familles, disposition de la carte. Le site ne fait aucun calcul statistique. | 🟡 Liens et attributs ✅ ; familles et disposition S3 |
+| A1 | **Tout est calculé à l'avance** : liens, familles, disposition de la carte. Le site ne fait aucun calcul statistique. | ✅ liens, attributs, familles, disposition |
 | A2 | **Site statique** servi par nginx ; pas de serveur applicatif ni de base en production. | 🟡 Image nginx ✅ ; contenu S5-S6 |
 | A3 | **Une seule source de vérité** : les fichiers Parquet de `data/output/`. Tout le reste en dérive. | ✅ |
 | A4 | **Reproductible de bout en bout** : une commande régénère tout depuis les sources brutes. | ✅ |
@@ -178,9 +178,8 @@ flowchart LR
     REG --> ING["ingest.py"]
     REG --> ARC["prepare/arcom.py"]
     REG --> REF["prepare/referentiel.py"]
-    REG --> CMP["compute/coaudience.py<br/>compute/attributs.py"]
+    REG --> CMP["compute/coaudience.py · attributs.py<br/>familles.py · disposition.py"]
     CMP --> BOOT["compute/bootstrap.py<br/>tirages communs"]
-    REG -.-> CMP3["compute/familles, disposition<br/>🔜 S3"]
     REG -.-> EXP["export/*<br/>🔜 S4"]
     REG --> SCH["schemas.py<br/>pandera"]
     ARC --> DIC["prepare/dictionnaire.py"]
@@ -217,8 +216,8 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `referentiel` | `prepare/referentiel.py` | `medias.csv`, `params.yaml`, `repondant_media.parquet` | `medias.parquet` | ✅ |
 | `coaudience` | `compute/coaudience.py` | `repondant_media.parquet`, `medias.parquet`, `params.yaml` | `paires.parquet` (interim), `liens.parquet`, `journal_coaudience.json` | ✅ |
 | `attributs` | `compute/attributs.py` | `repondant_media`, `repondant_profil`, `repondant_confiance`, `medias.parquet`, `params.yaml` | `attributs_medias.parquet` | ✅ |
-| `familles` | `compute/communities.py` | `liens.parquet` | `communities.parquet` | 🔜 S3 |
-| `disposition` | `compute/layout.py` | `liens.parquet`, `communities.parquet` | `layout.parquet` | 🔜 S3 |
+| `familles` | `compute/familles.py` | `repondant_media`, `medias.parquet`, `liens.parquet`, `params.yaml` | `familles.parquet`, `journal_familles.json` | ✅ S3 |
+| `disposition` | `compute/disposition.py` | `medias.parquet`, `liens.parquet` (liens affichés), `params.yaml` | `disposition.parquet` | ✅ S3 |
 | `proprietes` | `prepare/ownership.py` | base Médias français, corrections | `ownership.parquet` | 🔜 S4 |
 | `jt` | `prepare/jt.py` | CSV INA | `jt_profiles.parquet`, `jt_similarity.parquet` | 🔜 S5 |
 | `export_site` | `export/site_json.py` | toutes les sorties | `site/public/data/graph.json` | 🔜 S4 |
@@ -266,10 +265,13 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `interim/paires` | (`source`, `cible`) | toutes les paires de médias affichables, y compris sous les seuils : **jamais publiée** | ✅ S2 |
 | `output/medias` | `media_id` | `nom`, `type`, `public_prive`, `generique`, `variantes`, `libelles_arcom`, `same_brand_as`, `n_repondants`, `part_ponderee`, `affichable`, `fragile` | ✅ |
 | `output/correspondance_confiance` (CSV) | `colonne` | `libelle_arcom`, `media_id`, `statut` | ✅ |
-| `output/liens` | (`source`, `cible`), `source < cible` | `lift`, `lift_bas`, `lift_haut`, `n_communs` | ✅ S2 |
+| `output/liens` | (`source`, `cible`), `source < cible` | `lift`, `lift_bas`, `lift_haut`, `n_communs`, `affiche` (ADR-005) | ✅ S2-S3 |
+| `output/familles` | `media_id` | `famille`, `stabilite`, `intermediarite`, `participation`, `pont` | ✅ S3 |
+| `output/disposition` | `media_id` | `x`, `y` dans [0, 1] | ✅ S3 |
+| `output/journal_familles` (JSON) | — | réglages, tailles, ARI moyen, part stable, `familles_affichees` (RG-07) | ✅ S3 |
 | `output/attributs_medias` | `media_id` | `n_repondants`, `pol_n`, `pol_moy`/`_bas`/`_haut`, `pol_part_nr`, `age_moy`/`_bas`/`_haut`, `moins35`/`_bas`/`_haut`, `n_confiance`, `conf_ref`/`_bas`/`_haut`, `n_conf_gauche`, `n_conf_droite`, `conf_ecart_gd`/`_bas`/`_haut`, `fragile` | ✅ S2 |
 | `output/journal_coaudience` (JSON) | — | paires testées, gardées, rejetées par motif ; lift de référence | ✅ S2 |
-| `output/communities`, `layout`, `ownership`, `jt_*` | — | voir CdCT § 8.1 | 🔜 S3-S5 |
+| `output/ownership`, `jt_*`, `community_meta` | — | voir CdCT § 8.1 et [donnees.md](donnees.md) | 🔜 S4-S5 |
 
 ### 7.4 Référentiel des médias
 
@@ -338,7 +340,7 @@ Le cache de uv est monté pendant le build (`--mount=type=cache`) et n'entre pas
 | Environnement | Composition | Statut |
 |---|---|---|
 | Local | `docker compose` sur Docker Desktop (macOS arm64) | ✅ |
-| CI | GitHub Actions, `ubuntu-latest` (amd64) | 🟡 workflow écrit, jamais exécuté |
+| CI | GitHub Actions, `ubuntu-latest` (amd64) | ✅ |
 | Aperçu | Image `site` de chaque pull request, URL temporaire | 🔜 S5 |
 | Production | Image `site` sur une plateforme de conteneurs (Scaleway Serverless Containers ou Google Cloud Run, décision D3) | 🔜 S8 |
 
@@ -346,7 +348,7 @@ Le cache de uv est monté pendant le build (`--mount=type=cache`) et n'entre pas
 
 | Workflow | Déclencheur | Étapes | Statut |
 |---|---|---|---|
-| `ci.yml` | pull request, push sur `main` | **pipeline** : build de l'image (cache GHA) → contrôle de taille → lint et formatage → tests unitaires → pipeline complet → tests sur les données → `check` · **site** : image `dev` → Vitest, lint, build → image `runtime` → taille < 50 Mo → healthcheck, en-têtes, 404 | 🟡 écrit, jamais exécuté |
+| `ci.yml` | pull request, push sur `main` | **dockerfiles** : hadolint · **pipeline** : image → taille → Trivy → lint → tests unitaires → pipeline complet → tests sur les données → `check` · **site** : image `dev` → Vitest, lint, build → vocabulaire → image `runtime` → Trivy → taille < 50 Mo → healthcheck, en-têtes, 404 | ✅ verte depuis le 08/10/2026 |
 | `pipeline.yml` | manuel | pipeline complet, pull request automatique des sorties | 🔜 S4 |
 | `reproducibility.yml` | hebdomadaire | deux exécutions, comparaison des empreintes | 🔜 S4 |
 | `deploy.yml` | étiquette de version | images multi-architecture → ghcr.io → déploiement | 🔜 S8 |
@@ -369,7 +371,7 @@ flowchart LR
 |---|---|---|
 | Données individuelles | Restent dans `data/interim/`, ignoré par git et exclu des images ; seuls des agrégats au-dessus des seuils sont exportés ; test dédié | 🟡 séparation en place, contrôle des sorties S2 · test des exports 🔜 S4 |
 | Intégrité des sources | Empreinte sha256 de chaque fichier, adresses figées | ✅ |
-| Chaîne d'approvisionnement | Images de base figées par empreinte ; dépendances verrouillées (`uv.lock`) ; analyse de vulnérabilités (Trivy) en CI | 🟡 Trivy 🔜 S3 |
+| Chaîne d'approvisionnement | Images de base et outils de CI (hadolint, Trivy) figés par empreinte ; dépendances verrouillées (`uv.lock`, `package-lock.json`) ; Trivy en CI, échec sur faille critique corrigeable | ✅ |
 | Moindre privilège | Conteneurs non root ; montages de configuration et de code en lecture seule | ✅ |
 | Secrets | Aucun dans les images ni dans git ; `.env` local à partir de `.env.example` (mot de passe Neo4j) | ✅ |
 | Site | CSP sans source externe ni script en ligne, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options` ; nginx non root, système de fichiers en lecture seule, `cap_drop: ALL` ; journaux sans adresse IP complète ; HTTPS terminé par la plateforme | ✅ image · HTTPS 🔜 S8 |
@@ -384,11 +386,13 @@ flowchart LR
 
 | Niveau | Outil | Contenu actuel | Statut |
 |---|---|---|---|
-| Unitaires | pytest | 43 tests : + paramètres (chargeur typé), lift sur matrice jouet, lift de référence, tirages reproductibles, RG-04/RG-05 et journal, attributs sur jeu jouet, note politique, âge | ✅ |
-| Données réelles | pytest (marqueur `data`) | 15 tests : + aucun lien hors RG-04/RG-05, effectifs communs recomptés, journal, reproductibilité des liens, positionnement politique recalculé en SQL (DuckDB) depuis le fichier brut, aucune donnée sous les seuils | ✅ |
-| Schémas | pandera | 6 schémas (dont `liens` et `attributs_medias` avec plages), appliqués après chaque étape | ✅ |
+| Unitaires | pytest | 50 tests : + paramètres, lift, lift de référence, tirages, RG-04/RG-05, attributs, note politique, âge ; S3 : Leiden sur deux groupes, numérotation, appariement hongrois, ponts, ForceAtlas2 (déterminisme, normalisation, groupes séparés), liens affichés | ✅ |
+| Données réelles | pytest (marqueur `data`) | 20 tests : + liens, attributs, confidentialité ; S3 : voisins minimum affichés, RG-07 appliquée, familles et disposition recalculées à l'identique | ✅ |
+| Schémas | pandera | 8 schémas (dont `liens`, `attributs_medias`, `familles`, `disposition`), appliqués après chaque étape | ✅ |
 | Lint | ruff | `check` + `format --check` | ✅ |
-| Front-end | Vitest, ESLint, Prettier, `tsc` | 3 tests (normalisation de la recherche) | ✅ S2 |
+| Front-end | Vitest, ESLint, Prettier, `tsc` | 20 tests : normalisation de la recherche, formulations imposées RG-20/21/22/24, contrôle du vocabulaire | ✅ |
+| Vocabulaire | `npm run vocabulaire` | Formules interdites (RG-20, RG-25) dans `i18n/fr.ts`, `methode.md`, `donnees.md` | ✅ S3 |
+| Dockerfiles, images | hadolint, Trivy | Lint des deux Dockerfiles ; failles critiques corrigeables | ✅ S3 |
 | Bout en bout, accessibilité, performance | Playwright, axe-core, Lighthouse CI | — | 🔜 S6-S8 |
 
 ### 10.2 Journalisation
@@ -402,7 +406,7 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | Version de chaque source | `data/raw/manifest.json` (adresse, empreinte, taille, date de vérification) |
 | Correspondance de la confiance | `data/output/correspondance_confiance.csv` |
 | Filtrage des liens | `data/output/journal_coaudience.json` (paires testées, rejets par motif, lift de référence) |
-| Choix des seuils | `docs/exploration/seuils.md` (`make exploration`) |
+| Choix des seuils, des familles ; aperçu de la carte | `docs/exploration/seuils.md`, `familles.md`, `carte.svg` (`make exploration`) |
 | État des étapes | `data/.etat_pipeline.json` |
 | Décisions | `docs/decisions/ADR-*.md` |
 
@@ -428,16 +432,17 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | [ADR-002](decisions/ADR-002-base-graphe-neo4j.md) | Neo4j Community plutôt que Kùzu (archivé en octobre 2025) | 08/10/2026 |
 | [ADR-003](decisions/ADR-003-source-proprietes.md) | Base « Médias français » figée + fichier de corrections | 08/10/2026 |
 | [ADR-004](decisions/ADR-004-base-repondants.md) | Base de 2 939 répondants ; non-interrogés téléphoniques = ne suivent pas les médias en ligne | 08/10/2026 |
-| [ADR-005](decisions/ADR-005-seuils-des-liens.md) | RG-01 (50) et RG-04 (30) maintenus ; **RG-05 : option à trancher** (effet d'intensité, lift de référence 1,57) | 08/10/2026 |
+| [ADR-005](decisions/ADR-005-seuils-des-liens.md) | RG-01 (50) et RG-04 (30) maintenus ; RG-05 option C : données inchangées, carte limitée à 5 voisins minimum + liens au-dessus du lift de référence | 08/10/2026 |
 | [ADR-006](decisions/ADR-006-indicateurs-des-publics.md) | Âge approché par classes (65+ = 74 ans), note politique avec centre = « ST Centre », confiance = part de « source de référence » | 08/10/2026 |
+| [ADR-007](decisions/ADR-007-familles.md) | Familles : Leiden sur les liens affichés, `log(lift)`, résolution 0,6 → 3 familles, 94 % stables | 08/10/2026 |
+| [ADR-008](decisions/ADR-008-disposition.md) | ForceAtlas2 implémenté en numpy dans le pipeline | 08/10/2026 |
+| [J2](decisions/J2-go-no-go.md) | Jalon J2 : **go sous condition** du test H5 (proposition) | 08/10/2026 |
 
 **Décisions à prendre :**
 
 | # | Sujet | Échéance |
 |---|---|---|
-| ADR-005 | Règle RG-05 / affichage des liens : options A, B, C | **avant T-030 (S3)** |
-| ADR-007 | Pondération et résolution de Leiden | S3 |
-| ADR-008 | Implémentation de la disposition ForceAtlas2 (Python ou Node) | S3 |
+| J2 | Go / go partiel / stop, après le test H5 (noms des familles) | 30 octobre |
 | ADR-009 | Plateforme de conteneurs de production (D3) | S5 |
 
 ---
@@ -450,7 +455,8 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | Images construites pour arm64 uniquement en local | Dette | Différences possibles avec la CI | Build multi-architecture prévu (`deploy.yml`, S8) |
 | Base de propriété de décembre 2024, presse indépendante absente | Risque | Couverture < 90 % sans corrections | Fichier de corrections sourcé (ADR-003) |
 | Code monté en lecture seule en développement, mais copié dans l'image pour la CI | Choix | Deux chemins d'exécution | Les deux sont testés (local et CI) |
-| Graphe très dense : 62 % des paires reliées avec RG-05 telle qu'écrite | Risque | Carte illisible, « lien » sans signification | ADR-005 : décision avant T-030 |
+| Graphe très dense : 62 % des paires reliées avec RG-05 telle qu'écrite | Risque **traité** | Carte illisible | ADR-005 option C : 27 % des paires tracées |
+| Résolution des familles fragile (0,6 stable à 94 %, 0,7 à 66 %) | Risque | Familles non affichées à la prochaine édition | `make exploration` à chaque édition ; RG-07 protège le site (ADR-007) |
 | Âge connu par classes seulement | Limite des données | Âge moyen approché (± 1 an) | Mettre en avant la part des moins de 35 ans (ADR-006) |
 | Bibliothèques front récentes (Preact 11, Sigma 4, Vite 8, TypeScript 6) | Risque | Exemples et documentation plus rares | Squelette minimal validé par build et tests ; vérifier l'API de Sigma 4 avant S5 |
 | Projet initialement dans `Documents` (synchronisé avec iCloud Drive), disque plein à 98 % | Risque **résolu** le 08/10/2026 | macOS retirait les fichiers du disque ; Docker ne pouvait plus les lire (`Errno 35`) | Projet déplacé dans `~/dev/graphe-medias` ; contrôle `fichiers-locaux` conservé dans le Makefile |
@@ -459,16 +465,16 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 
 ## 14. État d'implémentation
 
-| Domaine | Fin S2 | Prochaine étape |
+| Domaine | Fin S3 | Prochaine étape |
 |---|---|---|
-| Socle Docker et outillage | ✅ pipeline, site-dev, site | hadolint, Trivy (S3) |
+| Socle Docker et outillage | ✅ pipeline, site-dev, site, hadolint, Trivy | Multi-architecture (S8) |
 | Ingestion des sources | ✅ 12 sources | — |
 | Préparation Arcom | ✅ médias, confiance, âge, politique | — |
-| Calculs du graphe | ✅ co-audience, attributs | Familles, disposition (S3) |
+| Calculs du graphe | ✅ co-audience, attributs, familles, disposition, ponts | Export `graph.json` (S4) |
 | Propriété | 🟡 sources téléchargées | Rapprochement (S4) |
 | Exports et base graphe | — | S4 |
-| Site | ✅ images `site-dev` et `site`, squelette Vite + Preact | Jetons de design, i18n (S3), carte (S5) |
-| CI/CD | 🟡 `ci.yml` écrit (pipeline + site), YAML corrigé | Exécution sur GitHub |
+| Site | ✅ images, squelette, jetons de design, polices hébergées, `i18n/fr.ts`, contrôle du vocabulaire | Carte (S5) |
+| CI/CD | ✅ verte : hadolint, pipeline, site, Trivy | `deploy.yml` (S8) | Exécution sur GitHub |
 
 ---
 

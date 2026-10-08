@@ -33,5 +33,6 @@ COPY docker/nginx-entetes.conf /etc/nginx/entetes.conf
 COPY --from=build /app/site/dist /usr/share/nginx/html
 USER 101
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=1s \
+# Démarrage rapide (start_interval) réglé dans compose.yaml ; hadolint ne connaît pas encore cette option.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD wget -q --spider http://127.0.0.1:8080/ || exit 1

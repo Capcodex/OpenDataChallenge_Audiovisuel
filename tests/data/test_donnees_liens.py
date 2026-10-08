@@ -127,3 +127,11 @@ def test_aucune_donnee_sous_les_seuils_dans_les_sorties_agregees(params):
     assert (attributs["n_repondants"] >= params.seuils.media_affichable_min).all()
     publiee = attributs["conf_ref"].notna()
     assert (attributs.loc[publiee, "n_confiance"] >= params.seuils.confiance_effectif_min).all()
+
+
+def test_liens_affiches_au_moins_les_voisins_min_de_chaque_media(liens, params):
+    affiches = liens[liens["affiche"]]
+    degre_affiche = pd.concat([affiches["source"], affiches["cible"]]).value_counts()
+    degre_total = pd.concat([liens["source"], liens["cible"]]).value_counts()
+    attendu = degre_total.clip(upper=params.affichage.voisins_min_par_media)
+    assert (degre_affiche.reindex(attendu.index, fill_value=0) >= attendu).all()

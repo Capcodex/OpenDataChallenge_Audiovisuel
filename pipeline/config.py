@@ -86,12 +86,20 @@ class Attributs:
 
 
 @dataclass(frozen=True)
+class Affichage:
+    voisins_min_par_media: int
+
+
+@dataclass(frozen=True)
 class Communautes:
     algorithme: str
+    liens: str
+    poids: str
     resolution: float
     sous_echantillons: int
     stabilite_noeud_min: float
     part_noeuds_stables_min: float
+    ponts_nombre: int
 
 
 @dataclass(frozen=True)
@@ -107,6 +115,7 @@ class Params:
     seuils: Seuils
     bootstrap: Bootstrap
     attributs: Attributs
+    affichage: Affichage
     communautes: Communautes
     layout: Layout
 
@@ -151,6 +160,7 @@ def valider_params(contenu: dict[str, Any]) -> Params:
         seuils=_section(contenu, "seuils", Seuils),
         bootstrap=_section(contenu, "bootstrap", Bootstrap),
         attributs=_section(contenu, "attributs", Attributs),
+        affichage=_section(contenu, "affichage", Affichage),
         communautes=_section(contenu, "communautes", Communautes),
         layout=_section(contenu, "layout", Layout),
     )
@@ -166,7 +176,11 @@ def valider_params(contenu: dict[str, Any]) -> Params:
         (0.5 < b.niveau_confiance < 1, "0,5 < bootstrap.niveau_confiance < 1"),
         (a.age_valeur_65_plus >= 65, "attributs.age_valeur_65_plus ≥ 65"),
         (0 <= a.gauche_max < a.droite_min <= 10, "0 ≤ gauche_max < droite_min ≤ 10"),
-        (c.algorithme in {"leiden", "louvain"}, "communautes.algorithme : leiden ou louvain"),
+        (p.affichage.voisins_min_par_media >= 1, "affichage.voisins_min_par_media ≥ 1"),
+        (c.algorithme == "leiden", "communautes.algorithme : leiden"),
+        (c.liens in {"affiches", "retenus"}, "communautes.liens : affiches ou retenus"),
+        (c.poids in {"log_lift", "lift"}, "communautes.poids : log_lift ou lift"),
+        (c.ponts_nombre >= 0, "communautes.ponts_nombre ≥ 0"),
         (c.resolution > 0, "communautes.resolution > 0"),
         (c.sous_echantillons >= 100, "communautes.sous_echantillons ≥ 100 (RG-07)"),
         (0 < c.stabilite_noeud_min <= 1, "0 < communautes.stabilite_noeud_min ≤ 1"),

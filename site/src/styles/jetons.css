@@ -1,0 +1,79 @@
+/*
+ * Jetons de design (T-038), relevés dans les maquettes haute fidélité.
+ * Toute couleur, taille ou espacement de l'interface passe par ces variables.
+ */
+:root {
+  /* Couleurs : texte */
+  --couleur-texte: #14171c;
+  --couleur-texte-secondaire: #3d434b;
+  --couleur-texte-discret: #5a616b;
+
+  /* Couleurs : fonds et surfaces */
+  --couleur-fond: #f4f5f7;
+  --couleur-surface: #ffffff;
+  --couleur-surface-discrete: #eef0f3;
+  --couleur-bordure: #dde1e6;
+  --couleur-bordure-forte: #c9ced5;
+  --couleur-neutre: #8a9099; /* liens entre familles, éléments inactifs */
+  --couleur-noeud-sans-famille: #5a616b; /* carte sans familles (RG-07) */
+
+  /* Couleurs : action */
+  --couleur-accent: #1f5fae;
+  --couleur-accent-fonce: #163f73;
+  --couleur-accent-clair: #eaf1fb;
+  --couleur-focus: #cfddf2;
+
+  /* Couleurs : avertissement (chiffre fragile, RG-03) */
+  --couleur-alerte-fond: #fff4e0;
+  --couleur-alerte-bordure: #f2d29b;
+  --couleur-alerte-texte: #5a3a00;
+
+  /* Familles de médias (palette catégorielle des maquettes, ordre fixe) */
+  --couleur-famille-1: #2a78d6;
+  --couleur-famille-2: #eb6834;
+  --couleur-famille-3: #1baf7a;
+  --couleur-famille-4: #eda100;
+  --couleur-famille-5: #e87ba4;
+
+  /* Typographie */
+  --police-texte: "IBM Plex Sans", system-ui, sans-serif;
+  --police-chiffres: "IBM Plex Mono", ui-monospace, monospace;
+  --taille-11: 0.6875rem;
+  --taille-12: 0.75rem;
+  --taille-13: 0.8125rem;
+  --taille-14: 0.875rem;
+  --taille-15: 0.9375rem;
+  --taille-16: 1rem;
+  --taille-18: 1.125rem;
+  --taille-20: 1.25rem;
+  --taille-22: 1.375rem;
+  --taille-26: 1.625rem;
+  --taille-34: 2.125rem;
+  --interligne: 1.5;
+  --interligne-titre: 1.15;
+
+  /* Espacements */
+  --espace-1: 4px;
+  --espace-2: 6px;
+  --espace-3: 8px;
+  --espace-4: 10px;
+  --espace-5: 12px;
+  --espace-6: 16px;
+  --espace-7: 20px;
+  --espace-8: 24px;
+  --espace-9: 32px;
+
+  /* Rayons */
+  --rayon-petit: 6px;
+  --rayon-moyen: 8px;
+  --rayon-champ: 10px;
+  --rayon-carte: 14px;
+  --rayon-pastille: 999px;
+
+  /* Ombres */
+  --ombre-menu: 0 8px 24px rgb(20 23 28 / 10%);
+  --ombre-dialogue: 0 24px 60px rgb(0 0 0 / 30%);
+
+  /* Accessibilité : cible tactile minimale */
+  --cible-min: 44px;
+}

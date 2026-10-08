@@ -7,7 +7,8 @@ suivis indépendamment l'un de l'autre.
 Sorties :
 - data/interim/paires.parquet : toutes les paires de médias affichables, avant filtrage. Contient
   des paires à faible effectif commun : jamais publiée (ENF-09), sert à l'exploration des seuils.
-- data/output/liens.parquet : liens retenus (RG-04, RG-05), source < cible.
+- data/output/liens.parquet : liens retenus (RG-04, RG-05), source < cible ; la colonne `affiche`
+  marque les liens montrés sur la carte (ADR-005, option C).
 - data/output/journal_coaudience.json : paires testées, gardées et rejetées par motif.
 """
 
@@ -103,6 +104,21 @@ def filtrer(paires: pd.DataFrame, params: Params) -> tuple[pd.DataFrame, dict[st
     return liens, journal
 
 
+def marquer_affiches(liens: pd.DataFrame, reference: float, voisins_min: int) -> pd.Series:
+    """Liens montrés sur la carte (ADR-005, option C) : pour chaque média, ses `voisins_min` liens
+    de plus fort lift, plus tous les liens dont la borne basse dépasse le lift de référence."""
+    long = pd.concat(
+        [
+            pd.DataFrame({"media": liens["source"], "lien": liens.index, "lift": liens["lift"]}),
+            pd.DataFrame({"media": liens["cible"], "lien": liens.index, "lift": liens["lift"]}),
+        ]
+    )
+    # Tri stable (lift décroissant, puis numéro de lien) : départage reproductible des ex aequo.
+    long = long.sort_values(["media", "lift", "lien"], ascending=[True, False, True], kind="stable")
+    plus_forts = set(long.groupby("media").head(voisins_min)["lien"])
+    return liens.index.isin(plus_forts) | (liens["lift_bas"] > reference)
+
+
 def executer(chemins: Chemins) -> None:
     params = charger_params(chemins)
     table = pd.read_parquet(chemins.interim / "repondant_media.parquet")
@@ -113,10 +129,13 @@ def executer(chemins: Chemins) -> None:
     poids = table["poids"].to_numpy(dtype=np.float64)
     paires = calculer_paires(x, poids, affichables, params)
     liens, journal = filtrer(paires, params)
+    reference = lift_reference(table)
+    liens["affiche"] = marquer_affiches(liens, reference, params.affichage.voisins_min_par_media)
     journal["medias_affichables"] = len(affichables)
     journal["medias_relies"] = int(pd.concat([liens["source"], liens["cible"]]).nunique())
     journal["iterations_bootstrap"] = params.bootstrap.iterations
-    journal["lift_reference_intensite"] = round(lift_reference(table), 4)
+    journal["lift_reference_intensite"] = round(reference, 4)
+    journal["liens_affiches"] = int(liens["affiche"].sum())
 
     chemins.interim.mkdir(parents=True, exist_ok=True)
     chemins.output.mkdir(parents=True, exist_ok=True)
@@ -137,8 +156,11 @@ def executer(chemins: Chemins) -> None:
         params.seuils.lien_lift_borne_basse_min,
     )
     log.info(
-        "  Lift de référence dû à l'intensité de consommation (ADR-005) : %.2f",
-        journal["lift_reference_intensite"],
+        "  Lift de référence dû à l'intensité de consommation : %.2f ; %d liens affichés sur la "
+        "carte (%d voisins minimum par média, ADR-005)",
+        reference,
+        journal["liens_affiches"],
+        params.affichage.voisins_min_par_media,
     )
     isoles = sorted(set(affichables) - set(liens["source"]) - set(liens["cible"]))
     if isoles:
