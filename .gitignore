@@ -1,5 +1,6 @@
 # Données brutes et intermédiaires : téléchargeables, et contiennent des réponses individuelles.
-data/
+# « /data/ » et non « data/ » : sinon tests/data/ et site/public/data/ seraient aussi ignorés.
+/data/
 
 # Environnement
 .env
