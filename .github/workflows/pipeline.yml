@@ -1,0 +1,64 @@
+name: Pipeline des données
+
+# T-050 : exécution complète du pipeline dans son conteneur, puis pull request automatique avec
+# les sorties publiées (site/public) et le journal. Déclenchement manuel, par exemple à la
+# publication d'une nouvelle édition du baromètre (après mise à jour de config/sources.yaml).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pipeline:
+    name: Régénérer les données publiées
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construire l'image du pipeline
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/pipeline.Dockerfile
+          tags: graphe-medias-pipeline:dev
+          load: true
+          cache-from: type=gha
+
+      - name: "Préparer les dossiers montés (utilisateur du conteneur : uid 1000)"
+        run: mkdir -p data site/public && chmod -R a+rwX data site/public
+
+      - name: Pipeline complet
+        run: docker compose run --rm pipeline python -m pipeline run --force
+
+      - name: Tests sur les données et contrôles des sorties
+        run: |
+          docker compose run --rm pipeline pytest -m data
+          docker compose run --rm pipeline python -m pipeline check
+
+      - name: Résumé du journal
+        run: |
+          {
+            echo "## Journal d'exécution"
+            echo '```json'
+            cat site/public/telechargements/journal.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Pull request avec les nouvelles sorties
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: donnees/regeneration
+          delete-branch: true
+          add-paths: site/public
+          commit-message: "Données : régénération par le pipeline"
+          title: "Données : régénération par le pipeline"
+          body: |
+            Sorties régénérées par le workflow « Pipeline des données » (exécution ${{ github.run_id }}).
+
+            À relire avant fusion : `site/public/telechargements/journal.json` (répondants, liens retenus, stabilité des familles, couverture de la propriété) et le différentiel de `site/public/data/graph.json`.
+
+            🤖 Pull request générée automatiquement.

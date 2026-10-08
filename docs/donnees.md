@@ -1,6 +1,6 @@
 # Données du projet : sources et dictionnaire
 
-*État : fin du sprint 3 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
+*État : fin du sprint 4 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
 
 Ce document recense **les sources utilisées** (section 1) et **la définition de chaque donnée** manipulée par le projet : variables lues dans les sources (section 2), fichiers de configuration (section 3) et tables produites par le pipeline (sections 4 et 5). La méthode de calcul est détaillée dans [methode.md](methode.md), les licences dans [LICENSE-DATA.md](../LICENSE-DATA.md).
 
@@ -29,7 +29,7 @@ Toutes les sources sont téléchargées par l'étape `ingest` depuis une adresse
 | [Les Français et l'information, baromètre 2026](https://www.data.gouv.fr/fr/datasets/les-francais-et-linformation-barometre/) (2e édition, terrain juin-juillet 2025) | Arcom | Licence Ouverte v2.0 | Médias suivis, confiance, âge, positionnement politique : liens et profils des publics | ✅ utilisée |
 | [Classement thématique des sujets de JT, 2000-2020](https://www.data.gouv.fr/fr/datasets/classement-thematique-des-sujets-de-journaux-televises-janvier-2000-decembre-2020/) | INA | Licence Ouverte v1.0 | Module JT : profils thématiques et similarité des chaînes | Téléchargée · traitement S5 |
 | [Temps de parole des femmes et des hommes (déclarations CSA)](https://www.data.gouv.fr/fr/datasets/temps-de-parole-des-femmes-et-des-hommes-dans-les-programmes-ayant-fait-lobjet-dune-declaration-au-csa-pour-son-rapport-portant-sur-la-representation-des-femmes-a-la-television-et-la-radio/) | INA / CSA | Licence Ouverte v1.0 | Éditeur et groupe des chaînes et radios (complément de la propriété) | Téléchargée · traitement S4 |
-| [Médias français : qui possède quoi](https://github.com/mdiplo/Medias_francais), commit `231814e` du 17/12/2024 | Le Monde diplomatique, Acrimed | ODC-By v1.0 (attribution obligatoire) | Propriétaires et groupes des médias ([ADR-003](decisions/ADR-003-source-proprietes.md)) | Téléchargée · traitement S4 |
+| [Médias français : qui possède quoi](https://github.com/mdiplo/Medias_francais), commit `231814e` du 17/12/2024 | Le Monde diplomatique, Acrimed | ODC-By v1.0 (attribution obligatoire) | Propriétaires et groupes des médias ([ADR-003](decisions/ADR-003-source-proprietes.md), [ADR-009](decisions/ADR-009-propriete-et-exports.md)) | ✅ utilisée |
 
 ### 1.2 Fichiers
 
@@ -96,7 +96,7 @@ Fichier sans en-tête. Noms de colonnes retenus lors de l'analyse exploratoire :
 | `group` | Groupe audiovisuel | Propriété |
 | `*_2019`, `*_2020` | Déclarations et temps de parole par sexe | Non utilisées |
 
-### 2.4 Médias français (`mdiplo_*`, à traiter au sprint 4)
+### 2.4 Médias français (`mdiplo_*`)
 
 | Fichier | Colonnes | Définition |
 |---|---|---|
@@ -105,6 +105,8 @@ Fichier sans en-tête. Noms de colonnes retenus lors de l'analyse exploratoire :
 | `personnes.tsv` | `Nom`, `rangChallenges<année>`, `milliardaireForbes<année>` (2021-2024) | Une personne par ligne |
 | `organisation-media.tsv`, `personne-media.tsv` | `id`, `origine`, `qualificatif`, `valeur`, `cible` | Lien de détention : `origine` détient `cible` ; `valeur` = part de détention |
 | `organisation-organisation.tsv`, `personne-organisation.tsv` | idem + `commentaire` | idem, entre organisations |
+
+Valeurs de `qualificatif` : `égal à` (282 relations, `valeur` en pourcentage), `contrôle` (22, sans valeur), `participe` (5), `supérieur à` (4), `inférieur à` (1). Seul `égal à` donne une part chiffrée. Fichiers en UTF-8 avec fins de ligne Windows (CRLF).
 
 ---
 
@@ -138,9 +140,23 @@ Une ligne par média (99 en 2026). Maintenu à la main, validé à chaque exécu
 | `profil.age.classes` | Code → libellé attendu et bornes `[âge min, âge max]` (`null` = pas de borne haute) |
 | `profil.politique.codes` | Code → libellé attendu et note 0-10 |
 
-### 3.3 Paramètres : `config/params.yaml`
+### 3.3 Corrections de propriété : `config/proprietes_corrections.csv`
 
-Liste et valeurs dans [methode.md § 8](methode.md#8-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
+Une ligne par média à traiter hors du rapprochement automatique ([ADR-009](decisions/ADR-009-propriete-et-exports.md)).
+
+| Colonne | Définition |
+|---|---|
+| `media_id` | Média du référentiel |
+| `regle` | `nom_base` (nom différent dans la base), `meme_que` (mêmes propriétaires qu'un autre média), `detenteur` (saisie sourcée, plusieurs lignes possibles), `non_identifie` |
+| `valeur` | Nom dans la base (`nom_base`), `media_id` modèle (`meme_que`) ou nom du détenteur (`detenteur`) |
+| `part` | Part du détenteur, en % (`detenteur`) |
+| `type_proprietaire` | `personne`, `etat` ou `organisation` (`detenteur`) |
+| `source`, `date` | Source et date de l'information ; **obligatoires** pour `detenteur` |
+| `commentaire` | Justification |
+
+### 3.4 Paramètres : `config/params.yaml`
+
+Liste et valeurs dans [methode.md § 9](methode.md#9-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
 
 ---
 
@@ -293,18 +309,68 @@ Une ligne par média affichable (68 lignes). Clé : `media_id` ([ADR-008](decisi
 
 ### 5.9 `graphe_provisoire.gexf` · `make exploration` (hors pipeline)
 
-Graphe complet pour Gephi (jalon J2). Nœuds : médias affichables avec `label`, `type`, `n_repondants`, `famille`, `stabilite`, `pol_moy`, `age_moy` et position. Arêtes : tous les liens retenus avec `weight` (lift), `lift_bas`, `n_communs`, `affiche`. Remplacé au sprint 4 par l'export `graphe.gexf`.
+Graphe complet pour Gephi, produit pour le jalon J2. Remplacé par `telechargements/graphe.gexf` (§ 6.2).
+
+### 5.10 `proprietes.parquet` · étape `proprietes`
+
+Une ligne par (média, propriétaire ultime) ; une ligne sans propriétaire pour un média non identifié. Médias non génériques du référentiel ([ADR-009](decisions/ADR-009-propriete-et-exports.md)).
+
+| Colonne | Type | Définition |
+|---|---|---|
+| `media_id` | str | Identifiant du média |
+| `groupe` | str, vide possible | Détenteur direct principal |
+| `proprietaire_id` | str, vide si non identifié | Identifiant du propriétaire ultime (`famille-bouygues`) |
+| `proprietaire` | str, vide si non identifié | Nom du propriétaire ultime |
+| `type_proprietaire` | str | `personne` (ou famille), `etat`, `organisation` |
+| `part` | float64, 0 à 1, vide possible | Part effective (produit des parts le long de la chaîne) ; vide si un maillon n'est pas chiffré |
+| `statut` | str | `base`, `correction`, `meme_que`, `non_identifie` |
+| `source`, `date` | str | Source de l'information et sa date |
+
+### 5.11 `journal_arcom.json`, `journal_proprietes.json` et `run_log.json`
+
+- `journal_arcom.json` (`prepare_arcom`) : `repondants_total`, `repondants_base`, `non_interroges_par_question`, `medias`, `reponses_confiance`, `medias_avec_confiance`, `notes_politiques`.
+- `journal_proprietes.json` (`proprietes`) : `medias_affichables`, `rattaches_base`, `rattaches_correction`, `rattaches_meme_que`, `non_identifies`, `sans_statut`, `taux_rattaches`, `taux_rattaches_ou_marques`, `non_identifies_liste`.
+- `run_log.json` (`journal`) : journal complet d'une exécution (EF-FT-10). Il contient `version_pipeline`, `edition`, `date_traitement`, `sources` (identifiant, sha256, taille), `params`, et les sections `repondants`, `medias`, `liens`, `attributs`, `familles` et `proprietes`. Il est publié tel quel dans `telechargements/journal.json`.
 
 ---
 
-## 6. Tables prévues
+## 6. Données publiées (`site/public/`, versionnées)
+
+### 6.1 `data/graph.json` · étape `export_site`
+
+Données de la carte, au format décrit et validé par [`site/src/graph/schema.json`](../site/src/graph/schema.json) (format 1, gelé au jalon J3, [ADR-009](decisions/ADR-009-propriete-et-exports.md)). JSON compact, réels arrondis à 3 décimales, 155 ko en 2026.
+
+| Clé | Contenu |
+|---|---|
+| `meta` | `format`, `edition`, `date_traitement`, `version_pipeline`, `adresse_site`, `sources`, `params`, `communities_displayed` (RG-07), `lift_reference` |
+| `nodes[]` | Un média affichable : `id`, `label`, `aliases`, `type`, `public`, `x`, `y`, `community`, `stability`, `bridge`, `n`, `share`, `fragile`, `pol`, `age`, `under35`, `trust`, `trust_gap` (triplets [valeur, borne basse, borne haute], `null` si non publiés), `pol_nr`, `group`, `owners[] {id, share}`, `owner_status` |
+| `others[]` | Médias sous le seuil (RG-02) : `id`, `label`, `aliases`, `type` seulement |
+| `edges[]` | Liens retenus : `s`, `t`, `lift`, `ci` [bas, haut], `n` (répondants communs), `shown` (tracé sur la carte) |
+| `communities[]` | `id`, `label` (provisoire), `color`, `size` |
+| `owners[]` | `id`, `name`, `type`, `source`, `as_of` |
+| `jt` | `null` jusqu'au sprint 5 |
+
+### 6.2 `telechargements/` · étapes `telechargements` et `journal`
+
+| Fichier | Contenu |
+|---|---|
+| `medias.csv`, `medias.parquet` | Médias affichables : référentiel, effectifs, profils des publics (§ 5.3), famille et ponts (§ 5.6), position (§ 5.8), groupe. Les effectifs de confiance sont vides quand l'indicateur correspondant n'est pas publié (ENF-09) |
+| `liens.csv`, `liens.parquet` | Liens retenus (§ 5.2) |
+| `proprietes.csv`, `proprietes.parquet` | Propriété des médias affichables (§ 5.10) |
+| `graphe.gexf` | Graphe complet pour Gephi : nœuds avec position et attributs principaux, arêtes pondérées par le lift |
+| `dictionnaire.md` | Description de chaque colonne, générée par le pipeline |
+| `journal.json` | Copie de `run_log.json` |
+
+CSV en UTF-8, séparateur virgule, point décimal, réels à 6 chiffres significatifs.
+
+---
+
+## 7. Tables prévues
 
 | Table | Sprint | Colonnes prévues (CdCT § 8.1) |
 |---|---|---|
-| `community_meta` | S4 | `community_id`, `label` (noms issus du test H5), `color`, `size` |
-| `ownership` | S4 | `media_id`, `owner_id`, `group`, `owner_name`, `owner_type`, `share`, `source`, `as_of` |
+| Noms des familles | après le test H5 | `communities[].label` dans `graph.json` |
 | `jt_profiles` | S5 | `channel`, `year`, `rubric`, `n_subjects`, `duration_s`, `share_subjects`, `share_duration` |
 | `jt_similarity` | S5 | `channel_a`, `channel_b`, `period`, `js_similarity`, `sync_corr` |
-| `site/public/data/graph.json` | S4 | Format du CdCT § 8.2 |
 
 Les noms définitifs suivront la convention française du dépôt (comme `liens` et `attributs_medias`), et cette section sera alors déplacée dans la section 5.

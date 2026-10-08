@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Projet** | Graphe des médias français |
-| **Version du document** | 0.3 — fin du sprint 3 |
+| **Version du document** | 0.4 — fin du sprint 4 |
 | **Date** | 8 octobre 2026 |
 | **Auteur** | Alexandre Masson |
 | **Statut** | En construction : complété à chaque sprint |
@@ -163,7 +163,7 @@ flowchart TB
 | `site-dev` | `docker/site.Dockerfile`, cible `dev` (node:24-slim) | Serveur de développement Vite, Vitest, ESLint, Prettier | ✅ |
 | `site` | `docker/site.Dockerfile`, cible `runtime` (nginx-unprivileged alpine-slim) | Site de production | ✅ squelette (contenu S5-S6) |
 | `e2e` | image Playwright officielle | Tests de bout en bout, accessibilité, performance | 🔜 S6 |
-| `neo4j` | `neo4j:5-community` | Requêtes Cypher pour l'analyse et les chercheurs | 🔜 S4 |
+| `neo4j` | `neo4j:5-community` (5.26, figée par empreinte), profil `analyse` | Requêtes Cypher pour l'analyse et les chercheurs | ✅ S4 |
 
 ---
 
@@ -218,10 +218,11 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `attributs` | `compute/attributs.py` | `repondant_media`, `repondant_profil`, `repondant_confiance`, `medias.parquet`, `params.yaml` | `attributs_medias.parquet` | ✅ |
 | `familles` | `compute/familles.py` | `repondant_media`, `medias.parquet`, `liens.parquet`, `params.yaml` | `familles.parquet`, `journal_familles.json` | ✅ S3 |
 | `disposition` | `compute/disposition.py` | `medias.parquet`, `liens.parquet` (liens affichés), `params.yaml` | `disposition.parquet` | ✅ S3 |
-| `proprietes` | `prepare/ownership.py` | base Médias français, corrections | `ownership.parquet` | 🔜 S4 |
+| `proprietes` | `prepare/proprietes.py` | base Médias français, `proprietes_corrections.csv`, `medias.parquet` | `proprietes.parquet`, `journal_proprietes.json` | ✅ S4 |
 | `jt` | `prepare/jt.py` | CSV INA | `jt_profiles.parquet`, `jt_similarity.parquet` | 🔜 S5 |
-| `export_site` | `export/site_json.py` | toutes les sorties | `site/public/data/graph.json` | 🔜 S4 |
-| `telechargements` | `export/downloads.py` | toutes les sorties | `site/public/telechargements/*` | 🔜 S4 |
+| `export_site` | `export/site_json.py` | sorties agrégées, `site/src/graph/schema.json` | `site/public/data/graph.json` (validé) | ✅ S4 |
+| `telechargements` | `export/telechargements.py` | sorties agrégées | `site/public/telechargements/*` (CSV, Parquet, GEXF, dictionnaire) | ✅ S4 |
+| `journal` | `export/journal.py` | journaux des étapes, manifeste | `run_log.json`, `telechargements/journal.json` | ✅ S4 |
 
 ### 6.4 Ligne de commande
 
@@ -230,7 +231,7 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `python -m pipeline run` | Toutes les étapes, en sautant celles qui sont à jour | ✅ |
 | `run --only <étape>` / `--from <étape>` / `--force` | Exécution ciblée ou forcée | ✅ |
 | `python -m pipeline check` | Valide les sorties existantes | ✅ |
-| `python -m pipeline export-neo4j` | Charge le graphe dans Neo4j | 🔜 S4 (renvoie le code 2) |
+| `python -m pipeline export-neo4j [--verifier]` | Charge le graphe dans Neo4j ; exécute les requêtes d'exemple | ✅ S4 (`make neo4j`) |
 
 ---
 
@@ -271,7 +272,9 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `output/journal_familles` (JSON) | — | réglages, tailles, ARI moyen, part stable, `familles_affichees` (RG-07) | ✅ S3 |
 | `output/attributs_medias` | `media_id` | `n_repondants`, `pol_n`, `pol_moy`/`_bas`/`_haut`, `pol_part_nr`, `age_moy`/`_bas`/`_haut`, `moins35`/`_bas`/`_haut`, `n_confiance`, `conf_ref`/`_bas`/`_haut`, `n_conf_gauche`, `n_conf_droite`, `conf_ecart_gd`/`_bas`/`_haut`, `fragile` | ✅ S2 |
 | `output/journal_coaudience` (JSON) | — | paires testées, gardées, rejetées par motif ; lift de référence | ✅ S2 |
-| `output/ownership`, `jt_*`, `community_meta` | — | voir CdCT § 8.1 et [donnees.md](donnees.md) | 🔜 S4-S5 |
+| `output/proprietes` | (`media_id`, `proprietaire_id`) | `groupe`, `proprietaire`, `type_proprietaire`, `part` effective, `statut`, `source`, `date` | ✅ S4 |
+| `output/run_log` (JSON) | — | journal complet d'une exécution (EF-FT-10) | ✅ S4 |
+| `output/jt_*` | — | voir CdCT § 8.1 | 🔜 S5 |
 
 ### 7.4 Référentiel des médias
 
@@ -301,9 +304,9 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | Référentiel : identifiants uniques, valeurs autorisées, `same_brand_as` réciproque | `prepare/medias.py` |
 | Schémas pandera des sorties | après chaque étape, `check` |
 
-### 7.6 Format d'échange avec le site (🔜 S4)
+### 7.6 Format d'échange avec le site (✅ S4, gelé au jalon J3)
 
-`site/public/data/graph.json`, figé au jalon J3 (6 novembre). Structure : `meta` (édition, paramètres, sources), `nodes`, `edges`, `communities`, `owners`, `jt`. Schéma JSON versionné dans `site/src/graph/schema.json`, validé à l'export et au chargement. Budget : < 2 Mo. Détail dans le CdCT § 8.2.
+`site/public/data/graph.json`, format 1, gelé ([ADR-009](decisions/ADR-009-propriete-et-exports.md)). Structure : `meta`, `nodes`, `others` (médias sous le seuil), `edges`, `communities`, `owners`, `jt`. Schéma JSON dans `site/src/graph/schema.json`, monté en lecture seule dans le conteneur `pipeline` et validé à chaque export. 155 ko (29 ko compressé) pour un budget de 2 Mo. Détail des clés : [donnees.md § 6](donnees.md).
 
 ---
 
@@ -317,7 +320,7 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `site-dev` | `node:24-slim@sha256:d6aa754f…` | ≈ 375 Mo décompressée (développement) | `node` (uid 1000) | ✅ |
 | `site` | `node:24-slim` (build) → `nginx-unprivileged:stable-alpine-slim@sha256:3af0c10d…` (runtime) | **≈ 9 Mo** (budget 50 Mo) | `nginx` (uid 101) | ✅ |
 | `e2e` | `mcr.microsoft.com/playwright` | — | — | 🔜 S6 |
-| `neo4j` | `neo4j:5-community` | — | — | 🔜 S4 |
+| `neo4j` | `neo4j:5-community@sha256:c7d25c0e…` | 345 Mo | image officielle | ✅ S4 |
 
 **Construction de l'image `pipeline` :**
 1. copie de `pyproject.toml`, `uv.lock`, `README.md`, puis `uv sync --frozen --no-install-project` (couche de dépendances, mise en cache) ;
@@ -349,8 +352,8 @@ Le cache de uv est monté pendant le build (`--mount=type=cache`) et n'entre pas
 | Workflow | Déclencheur | Étapes | Statut |
 |---|---|---|---|
 | `ci.yml` | pull request, push sur `main` | **dockerfiles** : hadolint · **pipeline** : image → taille → Trivy → lint → tests unitaires → pipeline complet → tests sur les données → `check` · **site** : image `dev` → Vitest, lint, build → vocabulaire → image `runtime` → Trivy → taille < 50 Mo → healthcheck, en-têtes, 404 | ✅ verte depuis le 08/10/2026 |
-| `pipeline.yml` | manuel | pipeline complet, pull request automatique des sorties | 🔜 S4 |
-| `reproducibility.yml` | hebdomadaire | deux exécutions, comparaison des empreintes | 🔜 S4 |
+| `pipeline.yml` | manuel | pipeline complet → tests sur les données → `check` → pull request automatique de `site/public` | ✅ S4 (non encore lancé) |
+| `reproducibility.yml` | hebdomadaire (lundi) | deux exécutions forcées, mêmes sha256 ; sorties versionnées = sorties régénérées | ✅ S4 (non encore lancé) |
 | `deploy.yml` | étiquette de version | images multi-architecture → ghcr.io → déploiement | 🔜 S8 |
 
 ### 8.5 Architecture de production cible (🔜 S8)
@@ -369,7 +372,7 @@ flowchart LR
 
 | Sujet | Mesure | Statut |
 |---|---|---|
-| Données individuelles | Restent dans `data/interim/`, ignoré par git et exclu des images ; seuls des agrégats au-dessus des seuils sont exportés ; test dédié | 🟡 séparation en place, contrôle des sorties S2 · test des exports 🔜 S4 |
+| Données individuelles | Restent dans `data/interim/`, ignoré par git et exclu des images ; seuls des agrégats au-dessus des seuils sont exportés ; un effectif n'est publié qu'avec son indicateur ; `test_no_individual_data.py` contrôle tout `site/public` | ✅ |
 | Intégrité des sources | Empreinte sha256 de chaque fichier, adresses figées | ✅ |
 | Chaîne d'approvisionnement | Images de base et outils de CI (hadolint, Trivy) figés par empreinte ; dépendances verrouillées (`uv.lock`, `package-lock.json`) ; Trivy en CI, échec sur faille critique corrigeable | ✅ |
 | Moindre privilège | Conteneurs non root ; montages de configuration et de code en lecture seule | ✅ |
@@ -386,8 +389,10 @@ flowchart LR
 
 | Niveau | Outil | Contenu actuel | Statut |
 |---|---|---|---|
-| Unitaires | pytest | 50 tests : + paramètres, lift, lift de référence, tirages, RG-04/RG-05, attributs, note politique, âge ; S3 : Leiden sur deux groupes, numérotation, appariement hongrois, ponts, ForceAtlas2 (déterminisme, normalisation, groupes séparés), liens affichés | ✅ |
-| Données réelles | pytest (marqueur `data`) | 20 tests : + liens, attributs, confidentialité ; S3 : voisins minimum affichés, RG-07 appliquée, familles et disposition recalculées à l'identique | ✅ |
+| Unitaires | pytest | 68 tests ; S4 : chaînes de détention et parts effectives, cycles, groupe principal, corrections, schéma de `graph.json` (5 cas refusés), dictionnaire complet, GEXF à date fixe, requêtes Cypher | ✅ |
+| Données réelles | pytest (marqueur `data`) | 26 tests ; S4 : `test_no_individual_data.py` (ENF-09 sur tout `site/public`), données Neo4j sans NaN | ✅ |
+| Reproductibilité | `make reproductibilite` | Deux exécutions forcées : 26 fichiers identiques | ✅ S4 |
+| Neo4j | `make neo4j` | Chargement puis 6 requêtes d'exemple non vides | ✅ S4 (local) |
 | Schémas | pandera | 8 schémas (dont `liens`, `attributs_medias`, `familles`, `disposition`), appliqués après chaque étape | ✅ |
 | Lint | ruff | `check` + `format --check` | ✅ |
 | Front-end | Vitest, ESLint, Prettier, `tsc` | 20 tests : normalisation de la recherche, formulations imposées RG-20/21/22/24, contrôle du vocabulaire | ✅ |
@@ -404,6 +409,7 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | Élément | Trace |
 |---|---|
 | Version de chaque source | `data/raw/manifest.json` (adresse, empreinte, taille, date de vérification) |
+| Journal complet d'une exécution | `data/output/run_log.json`, publié dans `telechargements/journal.json` |
 | Correspondance de la confiance | `data/output/correspondance_confiance.csv` |
 | Filtrage des liens | `data/output/journal_coaudience.json` (paires testées, rejets par motif, lift de référence) |
 | Choix des seuils, des familles ; aperçu de la carte | `docs/exploration/seuils.md`, `familles.md`, `carte.svg` (`make exploration`) |
@@ -437,13 +443,14 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | [ADR-007](decisions/ADR-007-familles.md) | Familles : Leiden sur les liens affichés, `log(lift)`, résolution 0,6 → 3 familles, 94 % stables | 08/10/2026 |
 | [ADR-008](decisions/ADR-008-disposition.md) | ForceAtlas2 implémenté en numpy dans le pipeline | 08/10/2026 |
 | [J2](decisions/J2-go-no-go.md) | Jalon J2 : **go sous condition** du test H5 (proposition) | 08/10/2026 |
+| [ADR-009](decisions/ADR-009-propriete-et-exports.md) | Propriétaires ultimes et parts effectives ; corrections sourcées ; format `graph.json` 1 gelé (J3) ; exports | 08/10/2026 |
 
 **Décisions à prendre :**
 
 | # | Sujet | Échéance |
 |---|---|---|
 | J2 | Go / go partiel / stop, après le test H5 (noms des familles) | 30 octobre |
-| ADR-009 | Plateforme de conteneurs de production (D3) | S5 |
+| ADR-010 | Plateforme de conteneurs de production (D3) | S5 |
 
 ---
 
@@ -453,7 +460,7 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 |---|---|---|---|
 | CI jamais exécutée | Risque | Problèmes Linux/amd64 non détectés (droits sur les volumes, architecture) | Créer le dépôt GitHub et lancer la CI |
 | Images construites pour arm64 uniquement en local | Dette | Différences possibles avec la CI | Build multi-architecture prévu (`deploy.yml`, S8) |
-| Base de propriété de décembre 2024, presse indépendante absente | Risque | Couverture < 90 % sans corrections | Fichier de corrections sourcé (ADR-003) |
+| Base de propriété de décembre 2024, presse indépendante absente | Risque | 76 % des médias rattachés, 16 « non identifiés » | Saisies sourcées dans `proprietes_corrections.csv` (ADR-009) |
 | Code monté en lecture seule en développement, mais copié dans l'image pour la CI | Choix | Deux chemins d'exécution | Les deux sont testés (local et CI) |
 | Graphe très dense : 62 % des paires reliées avec RG-05 telle qu'écrite | Risque **traité** | Carte illisible | ADR-005 option C : 27 % des paires tracées |
 | Résolution des familles fragile (0,6 stable à 94 %, 0,7 à 66 %) | Risque | Familles non affichées à la prochaine édition | `make exploration` à chaque édition ; RG-07 protège le site (ADR-007) |
@@ -465,14 +472,14 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 
 ## 14. État d'implémentation
 
-| Domaine | Fin S3 | Prochaine étape |
+| Domaine | Fin S4 | Prochaine étape |
 |---|---|---|
 | Socle Docker et outillage | ✅ pipeline, site-dev, site, hadolint, Trivy | Multi-architecture (S8) |
 | Ingestion des sources | ✅ 12 sources | — |
 | Préparation Arcom | ✅ médias, confiance, âge, politique | — |
-| Calculs du graphe | ✅ co-audience, attributs, familles, disposition, ponts | Export `graph.json` (S4) |
-| Propriété | 🟡 sources téléchargées | Rapprochement (S4) |
-| Exports et base graphe | — | S4 |
+| Calculs du graphe | ✅ co-audience, attributs, familles, disposition, ponts | JT (S5) |
+| Propriété | ✅ 76 % rattachés, 100 % rattachés ou marqués | Saisies sourcées (hors code) |
+| Exports et base graphe | ✅ `graph.json` validé, téléchargements, journal, Neo4j | Chargement du site (S5) |
 | Site | ✅ images, squelette, jetons de design, polices hébergées, `i18n/fr.ts`, contrôle du vocabulaire | Carte (S5) |
 | CI/CD | ✅ verte : hadolint, pipeline, site, Trivy | `deploy.yml` (S8) | Exécution sur GitHub |
 

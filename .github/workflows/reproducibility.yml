@@ -1,0 +1,38 @@
+name: Reproductibilité
+
+# ENF-12 (T-049) : chaque semaine, le pipeline est relancé depuis les sources brutes.
+# - deux exécutions forcées doivent donner des fichiers identiques ;
+# - les sorties versionnées (site/public) doivent être celles que l'on régénère.
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # lundi, 5 h UTC
+  workflow_dispatch:
+
+jobs:
+  reproductibilite:
+    name: Deux exécutions, mêmes empreintes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construire l'image du pipeline
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/pipeline.Dockerfile
+          tags: graphe-medias-pipeline:dev
+          load: true
+          cache-from: type=gha
+
+      - name: "Préparer les dossiers montés (utilisateur du conteneur : uid 1000)"
+        run: mkdir -p data site/public && chmod -R a+rwX data site/public
+
+      - name: Deux exécutions forcées
+        run: sh scripts/reproductibilite.sh
+
+      - name: Sorties versionnées identiques aux sorties régénérées
+        run: |
+          git status --porcelain -- site/public
+          git diff --exit-code --stat -- site/public

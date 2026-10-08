@@ -3,7 +3,7 @@ COMPOSE = docker compose
 RUN = $(COMPOSE) run --rm pipeline
 
 .PHONY: build pipeline ingest check test test-unit lint format shell clean-interim fichiers-locaux \
-	exploration dev site site-stop test-site lint-site
+	exploration dev site site-stop test-site lint-site neo4j neo4j-stop reproductibilite
 
 # macOS : si le projet est dans un dossier synchronisé avec iCloud Drive, macOS peut retirer les
 # fichiers du disque (« dataless ») ; Docker ne peut alors plus les lire (Errno 35).
@@ -66,6 +66,19 @@ test-site: fichiers-locaux        ## Tests Vitest du site
 lint-site: fichiers-locaux        ## ESLint, Prettier et contrôle du vocabulaire (RG-20)
 	$(COMPOSE) run --rm -v ./docs:/app/docs:ro site-dev sh -c "npm run lint && \
 		npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md"
+
+reproductibilite: fichiers-locaux  ## Deux exécutions forcées doivent donner des fichiers identiques
+	sh scripts/reproductibilite.sh
+
+# Base graphe d'analyse (profil « analyse ») : NEO4J_PASSWORD dans .env.
+neo4j: fichiers-locaux            ## Lancer Neo4j, charger le graphe, vérifier les requêtes d'exemple
+	@test -f .env || { echo "Créer .env à partir de .env.example (NEO4J_PASSWORD)"; exit 1; }
+	$(COMPOSE) --profile analyse up -d --wait neo4j
+	$(COMPOSE) run --rm -v ./docs:/app/docs:ro pipeline python -m pipeline export-neo4j --verifier
+	@echo "Neo4j : http://localhost:7474 (utilisateur neo4j)"
+
+neo4j-stop:                       ## Arrêter Neo4j (les données restent dans le volume neo4j-data)
+	$(COMPOSE) --profile analyse stop neo4j
 
 clean-interim:    ## Supprimer les fichiers intermédiaires (force un recalcul complet)
 	rm -rf data/interim data/output data/.etat_pipeline.json

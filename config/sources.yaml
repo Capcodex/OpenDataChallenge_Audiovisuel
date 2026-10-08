@@ -42,7 +42,8 @@ sources:
 
   # --- Le Monde diplomatique / Acrimed, « Médias français : qui possède quoi » (sprint 4) ---
   # Dépôt : https://github.com/mdiplo/Medias_francais — licence ODC-By v1.0 (attribution obligatoire)
-  # Figé au commit du 17 décembre 2024 (voir ADR-003).
+  # Figé au commit du 17 décembre 2024 (voir ADR-003). Compléments et corrections sourcés :
+  # config/proprietes_corrections.csv.
   - id: mdiplo_medias
     url: https://raw.githubusercontent.com/mdiplo/Medias_francais/231814eab6aa48b355a87b73258c357bf3bbd457/medias.tsv
     fichier: raw/proprietes/medias.tsv
