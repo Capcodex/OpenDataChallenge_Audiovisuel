@@ -1,6 +1,6 @@
 # Walkthrough : ce qui a été construit jusqu'ici
 
-Ce document fait visiter le projet tel qu'il est à la fin du **sprint 3** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
+Ce document fait visiter le projet tel qu'il est à la fin du **sprint 4** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
 
 Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour les bilans chiffrés, voir [sprints/](sprints/). Pour la méthode de calcul, voir [methode.md](methode.md).
 
@@ -19,6 +19,7 @@ Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour l
 | **Sprint 1** | Socle Docker, ingestion, table répondant × média | `graphe-medias/` |
 | **Sprint 2** | Liens de co-audience, profils des publics, image du site | `graphe-medias/` |
 | **Sprint 3** | Familles, disposition de la carte, jetons de design, textes de l'interface | `graphe-medias/` |
+| **Sprint 4** | Propriété, `graph.json`, téléchargements, Neo4j, reproductibilité | `graphe-medias/` |
 
 > Les documents de conception, d'abord dans `~/Documents/Data Viz/`, sont désormais dans `~/dev/Implementation/`, à côté du dépôt. `produits_data.md` ne se trouve dans aucun des deux dossiers.
 
@@ -34,7 +35,7 @@ Prérequis : Docker avec Docker Compose v2. Rien d'autre.
 cd ~/dev/graphe-medias
 make build      # construit l'image du pipeline (≈ 1 min la première fois)
 make pipeline   # télécharge les sources, les vérifie, prépare les données (≈ 12 s)
-make test       # 70 tests (+ 20 tests du site : make test-site)
+make test       # 94 tests (+ 20 tests du site : make test-site)
 ```
 
 Sortie attendue de `make pipeline` (première exécution) :
@@ -82,6 +83,10 @@ config/params.yaml ──────────┴──► [referentiel] ─�
                                   [attributs] ◄───────────┘──► data/output/attributs_medias.parquet
                                   [familles] ◄── liens affichés ──► data/output/familles.parquet
                                   [disposition] ◄─ liens affichés ─► data/output/disposition.parquet
+base Médias français + corrections ──► [proprietes] ──► data/output/proprietes.parquet
+toutes les sorties agrégées ──► [export_site] ──► site/public/data/graph.json (validé par son schéma)
+                            ──► [telechargements] ──► site/public/telechargements/ (CSV, Parquet, GEXF…)
+                            ──► [journal] ──► data/output/run_log.json
                                        ▲
                      compute/bootstrap.py : les mêmes 1 000 tirages pour les deux étapes
 ```
@@ -187,7 +192,17 @@ Tous les indicateurs sont des moyennes pondérées sur une partie du public d'un
 
 `make exploration` produit en plus `familles.md` (36 configurations comparées), un aperçu `carte.svg` et un fichier `graphe_provisoire.gexf` pour Gephi.
 
-### 3.7 Le site : deux images
+### 3.7 `proprietes` et les exports
+
+**Fichiers :** [`pipeline/prepare/proprietes.py`](../pipeline/prepare/proprietes.py), [`pipeline/export/`](../pipeline/export/) · **Décision :** [ADR-009](decisions/ADR-009-propriete-et-exports.md)
+
+- `proprietes_ultimes()` remonte le graphe de détention de la base « Médias français » jusqu'à ses sommets, en multipliant les parts le long de la chaîne. Les cas particuliers passent par [`config/proprietes_corrections.csv`](../config/proprietes_corrections.csv) : JT rattachés à leur chaîne, nom différent dans la base, saisies sourcées, médias non identifiés.
+- `export_site` assemble `graph.json`, puis le valide contre [`site/src/graph/schema.json`](../site/src/graph/schema.json), le contrat avec le site.
+- `telechargements` écrit les données ouvertes et génère `dictionnaire.md` à partir des descriptions déclarées dans le code.
+- `make neo4j` charge la base graphe d'analyse et vérifie les requêtes de [`docs/requetes.cypher`](requetes.cypher).
+- `make reproductibilite` lance deux fois le pipeline et compare les empreintes de tous les fichiers produits.
+
+### 3.8 Le site : deux images
 
 **Fichiers :** [`docker/site.Dockerfile`](../docker/site.Dockerfile), [`docker/nginx.conf`](../docker/nginx.conf), [`site/`](../site/)
 
@@ -294,4 +309,4 @@ Les tests sur les données sont ignorés tant que le pipeline n'a pas tourné (`
 
 **Jalon J2** : la proposition est « go », sous condition du test H5 : faire nommer les 3 familles par 3 à 5 personnes extérieures ([J2-go-no-go.md](decisions/J2-go-no-go.md)).
 
-**Sprint 4 (2-6 novembre)** : base de propriété (rapprochement avec le référentiel, fichier de corrections), export `graph.json` et schéma JSON, fichiers téléchargeables, chargement Neo4j. Détail dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).
+**Sprint 5 (9-13 novembre)** : module JT (profils thématiques, similarités), chargement de `graph.json` dans le site, première carte Sigma.js. Détail dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).

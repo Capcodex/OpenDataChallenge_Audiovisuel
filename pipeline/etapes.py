@@ -16,7 +16,8 @@ import pandera.pandas as pa
 from pipeline import ingest, schemas
 from pipeline.chemins import Chemins
 from pipeline.compute import attributs, coaudience, disposition, familles
-from pipeline.prepare import arcom, referentiel
+from pipeline.export import journal, site_json, telechargements
+from pipeline.prepare import arcom, proprietes, referentiel
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,12 @@ ETAPES: list[Etape] = [
         {"output/medias.parquet": schemas.MEDIAS},
     ),
     Etape(
+        "proprietes",
+        "Propriétaires des médias (base Médias français + corrections)",
+        proprietes,
+        {"output/proprietes.parquet": schemas.PROPRIETES},
+    ),
+    Etape(
         "coaudience",
         "Liens de co-audience : lift, intervalles, filtrage (RG-04, RG-05)",
         coaudience,
@@ -83,6 +90,13 @@ ETAPES: list[Etape] = [
         disposition,
         {"output/disposition.parquet": schemas.DISPOSITION},
     ),
+    Etape("export_site", "Export graph.json pour le site (validé par son schéma)", site_json),
+    Etape(
+        "telechargements",
+        "Données téléchargeables (CSV, Parquet, GEXF, dictionnaire)",
+        telechargements,
+    ),
+    Etape("journal", "Journal d'exécution complet (run_log.json)", journal),
 ]
 
 NOMS: list[str] = [e.nom for e in ETAPES]

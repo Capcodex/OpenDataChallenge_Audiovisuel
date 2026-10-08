@@ -4,7 +4,7 @@ Graphe de proximité des médias français : quels médias partagent le même pu
 
 Le projet s'appuie sur des données publiques : le baromètre de l'Arcom « Les Français et l'information » (2026), les données de l'INA sur les journaux télévisés et la base « Médias français » du Monde diplomatique et d'Acrimed.
 
-> **État :** sprint 3 terminé (familles de médias, disposition de la carte, jetons de design, textes de l'interface). Le site n'est encore qu'un squelette : la carte arrive au sprint 5.
+> **État :** sprint 4 terminé (propriété, export `graph.json`, données téléchargeables, Neo4j, reproductibilité). Le site n'est encore qu'un squelette : la carte arrive au sprint 5.
 
 ## Prérequis
 
@@ -30,7 +30,7 @@ Sans `make` : `docker compose run --rm pipeline [commande]`.
 | `python -m pipeline run --force` | Réexécute tout |
 | `python -m pipeline check` | Valide les sorties existantes (schémas) |
 
-Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `coaudience` → `attributs` → `familles` → `disposition`.
+Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `proprietes` → `coaudience` → `attributs` → `familles` → `disposition` → `export_site` → `telechargements` → `journal`.
 
 | Commande `make` | Effet |
 |---|---|
@@ -39,6 +39,8 @@ Sans `make` : `docker compose run --rm pipeline [commande]`.
 | `make site` / `make site-stop` | Site de production (nginx, lecture seule) : http://localhost:8080 |
 | `make test-site`, `make lint-site` | Tests Vitest ; ESLint, Prettier et contrôle du vocabulaire (RG-20) |
 | `make format` | Formatage Python (ruff) |
+| `make reproductibilite` | Deux exécutions forcées : les fichiers produits doivent être identiques |
+| `make neo4j` / `make neo4j-stop` | Base graphe d'analyse : chargement, requêtes d'exemple ([docs/requetes.cypher](docs/requetes.cypher)), http://localhost:7474 |
 
 ## Organisation
 
@@ -70,6 +72,10 @@ site/            site web : Vite + TypeScript + Preact (squelette), public/ (don
 | `data/output/familles.parquet` | Famille, stabilité, intermédiarité, participation, pont | Agrégé |
 | `data/output/disposition.parquet` | Position de chaque média sur la carte | Agrégé |
 | `data/output/journal_familles.json` | Réglages, stabilité, familles affichées ou non (RG-07) | Agrégé |
+| `data/output/proprietes.parquet` | Groupe et propriétaires ultimes de chaque média | Agrégé |
+| `data/output/run_log.json` | Journal complet de l'exécution | Agrégé |
+| `site/public/data/graph.json` | Données de la carte (format validé par `site/src/graph/schema.json`) | **Publié, versionné** |
+| `site/public/telechargements/` | CSV, Parquet, GEXF, dictionnaire des colonnes, journal | **Publié, versionné** |
 
 La méthode de calcul est décrite dans [docs/methode.md](docs/methode.md) ; les sources et la définition de chaque colonne dans [docs/donnees.md](docs/donnees.md).
 

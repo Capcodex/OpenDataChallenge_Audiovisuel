@@ -5,6 +5,13 @@
 edition: "2026"
 seed: 20261008
 
+# Publication : date de traitement affichée dans la mention de source (RG-24) et les exports.
+# Fixée ici, et non lue sur l'horloge, pour que deux exécutions donnent des fichiers identiques
+# (ENF-12). À mettre à jour à chaque nouvelle publication des données.
+publication:
+  date_traitement: "2026-10-08"
+  adresse_site: "https://graphe-medias.fr"   # provisoire (plateforme d'hébergement : S5)
+
 seuils:
   media_affichable_min: 50         # RG-01 : répondants (non pondérés) qui suivent le média
   chiffre_fragile_sous: 100        # RG-03

@@ -44,5 +44,10 @@ class Chemins:
         return self.racine / "site" / "public"
 
     @property
+    def schema_graphe(self) -> Path:
+        """Schéma JSON de graph.json, partagé avec le site (CdC technique § 8.2)."""
+        return self.racine / "site" / "src" / "graph" / "schema.json"
+
+    @property
     def etat(self) -> Path:
         return self.data / ".etat_pipeline.json"

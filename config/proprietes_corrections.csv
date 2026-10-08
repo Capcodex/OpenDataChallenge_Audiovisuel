@@ -1,0 +1,27 @@
+media_id,regle,valeur,part,type_proprietaire,source,date,commentaire
+rfi,nom_base,Radio France International,,,,,Nom écrit sans « e » final dans la base Médias français
+jt-tf1-20h,meme_que,tf1,,,,,Journal de la chaîne
+jt-tf1-13h,meme_que,tf1,,,,,Journal de la chaîne
+jt-france2-20h,meme_que,france-2,,,,,Journal de la chaîne
+jt-france2-13h,meme_que,france-2,,,,,Journal de la chaîne
+jt-france3-1920,meme_que,france-3,,,,,Journal de la chaîne
+jt-france3-12h,meme_que,france-3,,,,,Journal de la chaîne
+jt-m6-1945,meme_que,m6,,,,,Journal de la chaîne
+jt-m6-1245,meme_que,m6,,,,,Journal de la chaîne
+jt-arte,meme_que,arte,,,,,Journal de la chaîne
+l-equipe,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+l-humanite,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+mediapart,non_identifie,,,,,,Presse indépendante : non couverte par la base (ADR-003)
+blast,non_identifie,,,,,,Presse indépendante : non couverte par la base (ADR-003)
+atlantico,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+rue89,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+linternaute,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+konbini,non_identifie,,,,,,Média en ligne : non couvert par la base (ADR-003)
+brut,non_identifie,,,,,,Média en ligne : non couvert par la base (ADR-003)
+aj-plus,non_identifie,,,,,,Média en ligne : non couvert par la base (ADR-003)
+frontieres,non_identifie,,,,,,Absent de la base Médias français : saisie sourcée à faire
+le-crayon,non_identifie,,,,,,Média en ligne : non couvert par la base (ADR-003)
+hugodecrypte,non_identifie,,,,,,Créateur de contenu : non couvert par la base (ADR-003)
+samuel-etienne,non_identifie,,,,,,Créateur de contenu : non couvert par la base (ADR-003)
+gaspard-g,non_identifie,,,,,,Créateur de contenu : non couvert par la base (ADR-003)
+salome-saque,non_identifie,,,,,,Créateur de contenu : non couvert par la base (ADR-003)

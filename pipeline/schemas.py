@@ -148,3 +148,30 @@ DISPOSITION = pa.DataFrameSchema(
     strict=True,
     name="disposition",
 )
+
+PROPRIETES = pa.DataFrameSchema(
+    {
+        "media_id": pa.Column(str),
+        "groupe": pa.Column(str, nullable=True),
+        "proprietaire_id": pa.Column(str, nullable=True),
+        "proprietaire": pa.Column(str, nullable=True),
+        "type_proprietaire": pa.Column(
+            str, pa.Check.isin(["personne", "etat", "organisation"]), nullable=True
+        ),
+        "part": pa.Column("float64", pa.Check.in_range(0, 1.0001), nullable=True),
+        "statut": pa.Column(
+            str, pa.Check.isin(["base", "correction", "meme_que", "non_identifie"])
+        ),
+        "source": pa.Column(str, nullable=True),
+        "date": pa.Column(str, nullable=True),
+    },
+    checks=[
+        pa.Check(
+            lambda d: (d["statut"] == "non_identifie") == d["proprietaire"].isna(),
+            error="propriétaire vide si et seulement si non identifié",
+        )
+    ],
+    unique=["media_id", "proprietaire_id"],
+    strict=True,
+    name="proprietes",
+)

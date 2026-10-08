@@ -2,7 +2,7 @@
 
 *Source de la page « Méthode » du site (rédaction finale au sprint 7). Ce document est mis à jour à chaque modification d'un calcul ou d'un seuil. Les paramètres cités sont dans [`config/params.yaml`](../config/params.yaml).*
 
-État : **sprint 3**. Données, liens de co-audience, profils des publics, familles et disposition de la carte. La propriété et les JT seront ajoutés aux sprints 4 et 5.
+État : **sprint 4**. Données, liens de co-audience, profils des publics, familles, disposition de la carte et propriété. Le module JT sera ajouté au sprint 5.
 
 ---
 
@@ -102,12 +102,23 @@ Un découpage plus fin, en 4 familles, n'est pas assez stable (75 %) : il n'est 
 
 La position des médias est calculée une fois pour toutes par l'algorithme ForceAtlas2, celui du logiciel Gephi. Les médias reliés s'attirent, d'autant plus que leur lift est élevé, et tous les médias se repoussent. Deux médias proches sur la carte partagent donc souvent leur public. **Les distances ne sont pas des mesures exactes** : seuls les liens et leur lift le sont. Le calcul part d'une position tirée avec une graine fixe : la carte est identique à chaque visite ([ADR-008](decisions/ADR-008-disposition.md)).
 
-## 7. Ce qui n'est jamais publié
+## 7. La propriété des médias
+
+**Source :** base « Médias français : qui possède quoi » du Monde diplomatique et d'Acrimed (licence ODC-By), version du 17 décembre 2024 ([ADR-003](decisions/ADR-003-source-proprietes.md), [ADR-009](decisions/ADR-009-propriete-et-exports.md)).
+
+- Le **groupe** d'un média est son actionnaire direct principal (par exemple, Groupe TF1 pour TF1).
+- Ses **propriétaires** sont les personnes, familles, États ou organisations au sommet de la chaîne de détention.
+- La **part** indiquée est la part effective du capital. Par exemple, la famille Bouygues détient 24 % de Bouygues, qui détient 44 % du Groupe TF1 : sa part dans TF1 est de 24 % × 44 % ≈ 10,6 %. Quand la base indique un « contrôle » sans pourcentage, la part n'est pas chiffrée.
+- Les journaux télévisés ont les propriétaires de leur chaîne.
+- Les médias absents de la base sont indiqués comme **« propriétaire non identifié »**. C'est le cas de la presse indépendante, des médias en ligne et des créateurs de contenu : 16 médias en 2026. Aucune information de propriété n'est publiée sans source.
+
+## 8. Ce qui n'est jamais publié
 
 - Aucune réponse individuelle : les tables par répondant ne quittent pas le pipeline.
 - Aucun lien appuyé sur moins de 30 répondants communs, aucun indicateur de média sous 50 répondants, aucune confiance sous 50 réponses.
+- Aucun effectif sans l'indicateur qu'il accompagne : quand un indicateur n'est pas publié, son effectif ne l'est pas non plus.
 
-## 8. Paramètres (édition 2026)
+## 9. Paramètres (édition 2026)
 
 | Paramètre | Valeur | Règle |
 |---|---|---|
@@ -128,4 +139,5 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 | `stabilite_noeud_min`, `part_noeuds_stables_min` | 80 %, 80 % | RG-07 |
 | `ponts_nombre` | 10 | ADR-007 |
 | `layout.iterations` | 2 000 | ADR-008 |
+| `publication.date_traitement` | 2026-10-08 | Mention de source (RG-24) |
 | `seed` | 20261008 | Reproductibilité |

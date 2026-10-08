@@ -14,6 +14,7 @@ Sortie agrégée (data/output/) :
 - correspondance_confiance.csv : colonne de confiance → média, pour relecture
 """
 
+import json
 import logging
 import re
 from pathlib import Path
@@ -211,6 +212,7 @@ def executer(chemins: Chemins) -> None:
     b = base.loc[dans_base]
     log.info("  %d répondants au total, %d interrogés sur les médias", len(base), len(b))
 
+    non_interroges: dict[str, int] = {}
     blocs = []
     for question in cfg["questions"]:
         variable = question["variable"]
@@ -224,6 +226,7 @@ def executer(chemins: Chemins) -> None:
                 f"préciser « absence_vaut_non » dans variables_arcom.yaml si c'est attendu"
             )
         if sans_reponse.any():
+            non_interroges[variable] = int(sans_reponse.sum())
             log.info(
                 "  %s : %d répondants non interrogés, comptés comme ne suivant pas ces médias",
                 variable,
@@ -321,6 +324,18 @@ def executer(chemins: Chemins) -> None:
         int(profil["pol"].notna().sum()),
         100 * profil["pol"].isna().mean(),
     )
+    journal = {
+        "repondants_total": len(base),
+        "repondants_base": len(b),
+        "non_interroges_par_question": non_interroges,
+        "medias": int(indicateurs.shape[1]),
+        "reponses_confiance": len(confiance),
+        "medias_avec_confiance": int(confiance["media_id"].nunique()),
+        "notes_politiques": int(profil["pol"].notna().sum()),
+    }
+    (chemins.output / "journal_arcom.json").write_text(
+        json.dumps(journal, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def entrees(chemins: Chemins) -> list[Path]:
@@ -339,4 +354,5 @@ def sorties(chemins: Chemins) -> list[Path]:
         chemins.interim / "repondant_confiance.parquet",
         chemins.interim / "repondant_profil.parquet",
         chemins.output / "correspondance_confiance.csv",
+        chemins.output / "journal_arcom.json",
     ]

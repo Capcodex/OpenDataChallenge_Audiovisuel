@@ -1,5 +1,6 @@
 """Lecture des fichiers de configuration (config/*.yaml)."""
 
+import re
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
@@ -86,6 +87,12 @@ class Attributs:
 
 
 @dataclass(frozen=True)
+class Publication:
+    date_traitement: str
+    adresse_site: str
+
+
+@dataclass(frozen=True)
 class Affichage:
     voisins_min_par_media: int
 
@@ -112,6 +119,7 @@ class Layout:
 class Params:
     edition: str
     seed: int
+    publication: Publication
     seuils: Seuils
     bootstrap: Bootstrap
     attributs: Attributs
@@ -157,6 +165,7 @@ def valider_params(contenu: dict[str, Any]) -> Params:
     p = Params(
         edition=edition,
         seed=seed,
+        publication=_section(contenu, "publication", Publication),
         seuils=_section(contenu, "seuils", Seuils),
         bootstrap=_section(contenu, "bootstrap", Bootstrap),
         attributs=_section(contenu, "attributs", Attributs),
@@ -176,6 +185,10 @@ def valider_params(contenu: dict[str, Any]) -> Params:
         (0.5 < b.niveau_confiance < 1, "0,5 < bootstrap.niveau_confiance < 1"),
         (a.age_valeur_65_plus >= 65, "attributs.age_valeur_65_plus ≥ 65"),
         (0 <= a.gauche_max < a.droite_min <= 10, "0 ≤ gauche_max < droite_min ≤ 10"),
+        (
+            re.fullmatch(r"\d{4}-\d{2}-\d{2}", p.publication.date_traitement) is not None,
+            "publication.date_traitement au format AAAA-MM-JJ",
+        ),
         (p.affichage.voisins_min_par_media >= 1, "affichage.voisins_min_par_media ≥ 1"),
         (c.algorithme == "leiden", "communautes.algorithme : leiden"),
         (c.liens in {"affiches", "retenus"}, "communautes.liens : affiches ou retenus"),

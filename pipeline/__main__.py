@@ -4,6 +4,7 @@ import argparse
 import logging
 import sys
 import time
+from pathlib import Path
 
 from pipeline import __version__
 from pipeline.chemins import Chemins
@@ -54,9 +55,11 @@ def commande_check(_: argparse.Namespace, chemins: Chemins) -> int:
     return 1 if erreurs else 0
 
 
-def commande_export_neo4j(_: argparse.Namespace, __: Chemins) -> int:
-    log.error("export-neo4j sera disponible au sprint 4 (tâche T-046).")
-    return 2
+def commande_export_neo4j(args: argparse.Namespace, chemins: Chemins) -> int:
+    from pipeline.export.neo4j import exporter  # pilote Neo4j chargé seulement si nécessaire
+
+    requetes = Path(args.requetes) if args.verifier else None
+    return exporter(chemins, requetes)
 
 
 def construire_parseur() -> argparse.ArgumentParser:
@@ -79,7 +82,13 @@ def construire_parseur() -> argparse.ArgumentParser:
     check = sous.add_parser("check", help="valider les sorties existantes")
     check.set_defaults(fonction=commande_check)
 
-    neo = sous.add_parser("export-neo4j", help="charger le graphe dans Neo4j (sprint 4)")
+    neo = sous.add_parser("export-neo4j", help="charger le graphe dans Neo4j (profil « analyse »)")
+    neo.add_argument(
+        "--verifier", action="store_true", help="exécuter ensuite les requêtes d'exemple"
+    )
+    neo.add_argument(
+        "--requetes", default="docs/requetes.cypher", help="fichier des requêtes d'exemple"
+    )
     neo.set_defaults(fonction=commande_export_neo4j)
     return parseur
 
