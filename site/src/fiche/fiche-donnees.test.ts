@@ -95,7 +95,7 @@ describe("mention de source (RG-24, E3-03)", () => {
 
   it("texte conforme à RG-24", () => {
     expect(mentionFiche(g, "france-inter")).toBe(
-      "Source : Arcom, baromètre Les Français et l'information 2026 ; traitement : Graphe des médias, 8 octobre 2026, https://graphe-medias.fr/media/france-inter.",
+      `Source : Arcom, baromètre Les Français et l'information 2026 ; traitement : Graphe des médias, 8 octobre 2026, ${g.meta.adresse_site}/media/france-inter.`,
     );
   });
 });

@@ -10,7 +10,10 @@ seed: 20261008
 # (ENF-12). À mettre à jour à chaque nouvelle publication des données.
 publication:
   date_traitement: "2026-10-08"
-  adresse_site: "https://graphe-medias.fr"   # provisoire (plateforme d'hébergement : S5)
+  # Adresse publique du site (liens permanents, mention de source, exports) : service Cloud Run de
+  # production, adresse prévisible <service>-<numéro du projet>.<région>.run.app (ADR-010).
+  # Pas de nom de domaine pour la V1.
+  adresse_site: "https://graphe-medias-718967467429.europe-west9.run.app"
 
 seuils:
   media_affichable_min: 50         # RG-01 : répondants (non pondérés) qui suivent le média

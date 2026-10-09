@@ -20,3 +20,8 @@ output "url_service_apercu" {
 output "numero_projet" {
   value = data.google_project.projet.number
 }
+
+output "url_production" {
+  description = "Adresse publique du site (config/params.yaml : publication.adresse_site)."
+  value       = "https://${google_cloud_run_v2_service.production.name}-${data.google_project.projet.number}.${var.region}.run.app"
+}

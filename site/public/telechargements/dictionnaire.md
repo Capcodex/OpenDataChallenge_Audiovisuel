@@ -1,6 +1,6 @@
 # Dictionnaire des données téléchargeables
 
-Édition 2026 du baromètre de l'Arcom · traitement du 2026-10-08 · https://graphe-medias.fr
+Édition 2026 du baromètre de l'Arcom · traitement du 2026-10-08 · https://graphe-medias-718967467429.europe-west9.run.app
 
 Données agrégées uniquement, au-dessus des seuils d'effectif (aucune réponse individuelle). Méthode : page « Méthode » du site. CSV en UTF-8, séparateur virgule, point décimal ; mêmes tables en Parquet.
 

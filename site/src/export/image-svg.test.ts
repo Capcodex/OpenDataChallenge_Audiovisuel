@@ -18,7 +18,7 @@ describe("export d'image (E6-01, RG-23)", () => {
       expect(svg).toContain(fr.bandeau);
       expect(svg).toContain("Source : Arcom, baromètre « Les Français et l'information » 2026");
       expect(svg).toContain("8 octobre 2026");
-      expect(svg).toContain("graphe-medias.fr");
+      expect(svg).toContain(g.meta.adresse_site.replace(/^https:\/\//, ""));
     }
   });
 

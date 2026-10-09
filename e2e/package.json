@@ -4,10 +4,13 @@
   "type": "module",
   "description": "Tests de bout en bout du site (CdC technique § 12.2), contre l'image de production.",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "lighthouse": "node lighthouse.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "1.63.0"
+    "@playwright/test": "1.63.0",
+    "lighthouse": "^13.5.0",
+    "chrome-launcher": "^1.2.0"
   }
 }

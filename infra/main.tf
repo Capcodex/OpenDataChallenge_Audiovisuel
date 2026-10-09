@@ -1,8 +1,9 @@
 # Infrastructure Google Cloud du site (ADR-010, docs/deploiement.md).
 #
-# Crée : les API nécessaires, le registre d'images, le service Cloud Run d'aperçu (public), un
-# compte de service d'exécution sans droits, un compte de service pour GitHub Actions et la
-# fédération d'identité (Workload Identity Federation) limitée au dépôt GitHub du projet.
+# Crée : les API nécessaires, le registre d'images, les services Cloud Run d'aperçu et de
+# production (publics), un compte de service d'exécution sans droits, un compte de service pour
+# GitHub Actions et la fédération d'identité (Workload Identity Federation) limitée au dépôt
+# GitHub du projet.
 #
 # Le contenu du service (image, révisions, étiquettes pr-<n>) est déployé par
 # .github/workflows/preview.yml : Terraform crée le service une fois, puis ignore ces changements.
@@ -159,6 +160,53 @@ resource "google_cloud_run_v2_service" "apercu" {
 # Site public (contenu statique, aucune donnée individuelle : ENF-09).
 resource "google_cloud_run_v2_service_iam_member" "public" {
   name     = google_cloud_run_v2_service.apercu.name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# --- Service Cloud Run de production (sprint 8, T-087) ----------------------------------------
+#
+# Adresse publique : https://graphe-medias-<numéro du projet>.<région>.run.app, inscrite dans
+# config/params.yaml (liens permanents, mention de source). Déployé par .github/workflows/deploy.yml
+# à chaque étiquette de version (v1.0.0…) : Terraform crée le service, puis ignore son contenu.
+
+resource "google_cloud_run_v2_service" "production" {
+  name                = "graphe-medias"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = true
+
+  template {
+    service_account = google_service_account.site.email
+    scaling {
+      min_instance_count = 0
+      max_instance_count = var.instances_production_max
+    }
+    containers {
+      image = local.image_initiale
+      ports {
+        container_port = 8080
+      }
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "256Mi"
+        }
+        cpu_idle = true
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [template, traffic, client, client_version, scaling]
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_cloud_run_v2_service_iam_member" "production_public" {
+  name     = google_cloud_run_v2_service.production.name
   location = var.region
   role     = "roles/run.invoker"
   member   = "allUsers"

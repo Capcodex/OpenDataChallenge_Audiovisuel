@@ -63,13 +63,16 @@ site-stop:                        ## Arrêter les services du site
 test-site: fichiers-locaux        ## Tests Vitest du site
 	$(COMPOSE) run --rm site-dev npm test
 
-test-e2e: fichiers-locaux         ## Tests de bout en bout (Playwright) contre l'image de production
+test-e2e: fichiers-locaux         ## Playwright, axe-core et Lighthouse contre l'image de production
 	$(COMPOSE) --profile test build site e2e
-	$(COMPOSE) --profile test run --rm e2e; code=$$?; $(COMPOSE) --profile test down; exit $$code
+	$(COMPOSE) --profile test run --rm e2e && $(COMPOSE) --profile test run --rm e2e npm run lighthouse; \
+		code=$$?; $(COMPOSE) --profile test down; exit $$code
 
 lint-site: fichiers-locaux        ## ESLint, Prettier et contrôle du vocabulaire (RG-20)
-	$(COMPOSE) run --rm -v ./docs:/app/docs:ro site-dev sh -c "npm run lint && \
-		npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md"
+	$(COMPOSE) run --rm -v ./docs:/app/docs:ro -v ./README.md:/app/README.md:ro \
+		-v ./CONTRIBUTING.md:/app/CONTRIBUTING.md:ro site-dev sh -c "npm run lint && \
+		npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md \
+		../docs/recette.md ../README.md ../CONTRIBUTING.md"
 
 reproductibilite: fichiers-locaux  ## Deux exécutions forcées doivent donner des fichiers identiques
 	sh scripts/reproductibilite.sh
