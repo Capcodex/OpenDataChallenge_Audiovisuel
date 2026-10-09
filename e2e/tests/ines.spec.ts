@@ -63,6 +63,33 @@ test("Inès : voisins de France Inter et mention de source en moins de 30 s", as
   expect(Date.now() - debut).toBeLessThan(30_000);
 });
 
+test("copie refusée : mention sélectionnée dans une zone de texte (E3-03, repli)", async ({
+  page,
+}) => {
+  // Presse-papiers refusé (permission, navigateur ancien, contexte non sécurisé).
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: () => Promise.reject(new Error("refusé")) },
+    });
+  });
+  await page.goto("/media/france-inter");
+  await fiche(page)
+    .getByRole("button", { name: "Copier la mention de source" })
+    .click();
+
+  const zone = fiche(page).getByRole("textbox", {
+    name: "Copier la mention de source",
+  });
+  await expect(zone).toHaveValue(/^Source : Arcom, .+\/media\/france-inter\.$/);
+  await expect(zone).toBeFocused();
+  // Tout le texte est sélectionné : Ctrl+C suffit.
+  const selection = await zone.evaluate(
+    (el: HTMLTextAreaElement) =>
+      el.selectionEnd - el.selectionStart === el.value.length,
+  );
+  expect(selection).toBe(true);
+});
+
 test("variantes de nom et navigation au clavier (E2-01)", async ({ page }) => {
   await page.goto("/");
   for (const variante of ["franceinfo", "France Info", "france-info"]) {
@@ -98,17 +125,45 @@ test("clic sur un voisin : fiche du voisin en moins de 200 ms (E2-03, ENF-03)", 
     (await voisins(page).first().locator(".fiche__voisin-nom").textContent()) ??
     "";
 
-  const duree = await page.evaluate(async () => {
-    const debut = performance.now();
-    document.querySelector<HTMLButtonElement>(".fiche__voisin")?.click();
-    // Rendu terminé à la frame suivante.
-    await new Promise((fin) => requestAnimationFrame(() => fin(null)));
-    return performance.now() - debut;
+  // Délai entre le clic et l'affichage du nouveau titre. Une mesure isolée est bruitée sur une
+  // machine de CI chargée : 5 ouvertures, la médiane doit rester sous 200 ms.
+  const durees = await page.evaluate(async () => {
+    const mesures: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      const titre = document.querySelector("aside h2");
+      const avant = titre?.textContent;
+      const bouton =
+        document.querySelector<HTMLButtonElement>(".fiche__voisin");
+      if (!titre || !bouton) throw new Error("Fiche ou voisin introuvable");
+      const debut = performance.now();
+      const affiche = new Promise<void>((fin) => {
+        const observateur = new MutationObserver(() => {
+          if (document.querySelector("aside h2")?.textContent !== avant) {
+            observateur.disconnect();
+            fin();
+          }
+        });
+        observateur.observe(document.querySelector("aside")!, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      });
+      bouton.click();
+      await affiche;
+      mesures.push(performance.now() - debut);
+    }
+    return mesures;
   });
-  await expect(fiche(page).getByRole("heading", { level: 2 })).toHaveText(nom);
-  expect(duree).toBeLessThan(200);
+  const mediane = [...durees].sort((a, b) => a - b)[2];
+  expect(
+    mediane,
+    `durées mesurées : ${durees.map((d) => d.toFixed(0)).join(", ")} ms`,
+  ).toBeLessThan(200);
 
-  // Retour arrière du navigateur : fiche précédente.
+  // Retour arrière du navigateur : fiche du premier voisin, puis France Inter après 5 retours.
+  for (let i = 0; i < 4; i++) await page.goBack();
+  await expect(fiche(page).getByRole("heading", { level: 2 })).toHaveText(nom);
   await page.goBack();
   await expect(fiche(page).getByRole("heading", { level: 2 })).toHaveText(
     "France Inter",

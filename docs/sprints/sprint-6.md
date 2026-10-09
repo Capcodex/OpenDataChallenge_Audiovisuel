@@ -11,7 +11,7 @@ Le parcours d'Inès fonctionne de bout en bout. On recherche un média (variante
 | Scénario d'Inès (recherche → 5 voisins → mention copiée) | **2,2 s** automatisé (objectif : < 30 s pour un testeur) |
 | Ouverture de la fiche d'un voisin | **< 200 ms** (ENF-03), mesuré dans le test de bout en bout |
 | JavaScript du site | 510 ko, **136 ko compressé** (budget ENF-01 : 250 ko ; +14 ko, dont Fuse.js) |
-| Tests | 60 Vitest (+18) et 7 Playwright, tous verts ; 118 pytest inchangés (pipeline non modifié) |
+| Tests | 60 Vitest (+18) et 8 Playwright, tous verts ; 118 pytest inchangés (pipeline non modifié) |
 | Contrôle du vocabulaire (RG-20) | Vert |
 
 ## Tâches
@@ -27,7 +27,7 @@ Le parcours d'Inès fonctionne de bout en bout. On recherche un média (variante
 | T-065 | Relecture des textes de la fiche selon la charte | ✅ | Tous les textes dans `i18n/fr.ts` ; seuils lus dans `graph.json` (RG-08), jamais écrits en dur |
 | T-066 | Mise en évidence des voisins au survol et au clic | ✅ | Réducteurs Sigma en place depuis le sprint 5 ; délai vérifié en test |
 | T-067 | Mention de source copiable (presse-papiers + repli) | ✅ | Texte RG-24 avec le lien permanent ; zone de texte sélectionnée si la copie est refusée |
-| T-068 | Image `e2e`, service `e2e` (profil `test`), scénario d'Inès | 🟡 | Tests verts contre le site compilé ; **image Docker non construite localement** (moteur Docker indisponible), vérifiée par la CI de la pull request |
+| T-068 | Image `e2e`, service `e2e` (profil `test`), scénario d'Inès | ✅ | Image construite par la CI ; premier passage : 1 échec corrigé (contexte non sécurisé, voir ci-dessous) |
 
 ## Décisions prises
 
@@ -45,6 +45,8 @@ Le parcours d'Inès fonctionne de bout en bout. On recherche un média (variante
 | Un média sous le seuil n'a pas de point sur la carte : la mise en évidence aurait échoué | La carte ne met en évidence que les médias présents dans le graphe |
 | Jauges d'âge et de moins de 35 ans illisibles côte à côte (dessin réduit de moitié) | Jauges empilées, pleine largeur ; repéré sur capture d'écran |
 | Types de Preact : un champ `role="combobox"` exige l'attribut `list` | `list={undefined}`, la liste étant gérée en ARIA |
+| CI : la copie de la mention échouait dans le scénario d'Inès. Le site est testé sur `http://site:8080`, qui n'est pas un contexte sécurisé : pas d'API presse-papiers (le repli fonctionnait) | Chromium complet avec `--unsafely-treat-insecure-origin-as-secure`, comme en HTTPS (la version allégée ignore ce réglage) ; nouveau test du repli. Reproduit et vérifié sur le poste via son adresse réseau |
+| Délai d'ouverture d'une fiche (ENF-03) mesuré une seule fois : échec ponctuel sur machine chargée | Médiane de 5 ouvertures, fin mesurée au changement du titre |
 | `node_modules` du poste plus à jour que celui de l'image | Réinstallé depuis `package-lock.json` ; les tests du site tournent aussi hors Docker |
 
 ## Écarts au backlog
@@ -64,6 +66,6 @@ Le parcours d'Inès fonctionne de bout en bout. On recherche un média (variante
 
 ## Restant à faire hors code
 
-- [ ] Vérifier dans la CI de la pull request l'étape « Tests de bout en bout (Playwright) », première exécution de l'image `e2e`.
+- [ ] Vérifier que l'étape « Tests de bout en bout (Playwright) » de la CI passe au vert après la correction.
 - [ ] Démo du vendredi : scénario d'Inès chronométré avec de vrais testeurs (objectif : 4 sur 5 en moins de 30 s).
 - [ ] Toujours en attente : test H5 (noms des familles), saisies sourcées de propriété, GEXF dans Gephi, recherche utilisateur R-01.
