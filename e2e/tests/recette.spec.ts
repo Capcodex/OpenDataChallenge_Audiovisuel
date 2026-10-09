@@ -174,24 +174,6 @@ test("vue tableau : tri au clavier et lien vers la fiche (ENF-08)", async ({
   await expect(page.getByRole("rowheader")).toHaveText(["Libération"]);
 });
 
-test("page JT : avertissement permanent, matrice du pipeline", async ({
-  page,
-}) => {
-  await page.goto("/jt");
-  await expect(page.getByRole("note")).toContainText(
-    "Données closes au 31 décembre 2020",
-  );
-  const matrice = page.getByRole("table", {
-    name: "Similarité des profils éditoriaux entre chaînes",
-  });
-  const ligneTf1 = matrice
-    .getByRole("row")
-    .filter({ has: page.getByRole("rowheader", { name: "TF1", exact: true }) });
-  await expect(ligneTf1).toContainText("0,94");
-  await page.getByRole("button", { name: "2015-2020" }).click();
-  await expect(page.getByRole("heading", { name: /2015-2020/ })).toBeVisible();
-});
-
 test("page Méthode : sommaire et section « Ce que la carte ne mesure pas »", async ({
   page,
 }) => {
@@ -238,7 +220,6 @@ test("sources : mention Arcom, licence et date des données sur chaque écran (C
     "/media/france-inter",
     "/methode",
     "/tableau",
-    "/jt",
     "/proprietaires",
   ]) {
     await page.goto(adresse);
@@ -257,7 +238,6 @@ const ECRANS: [string, string, ((page: Page) => Promise<void>)?][] = [
   ["effectif insuffisant", "/media/skyrock"],
   ["méthode", "/methode"],
   ["tableau", "/tableau"],
-  ["JT", "/jt"],
   ["propriétaires", "/proprietaires?proprietaire=rodolphe-saade"],
   [
     "recherche ouverte",

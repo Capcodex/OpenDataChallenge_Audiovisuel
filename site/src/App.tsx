@@ -5,7 +5,6 @@ import { Carte, webglDisponible } from "./composants/Carte";
 import { EnTete } from "./composants/EnTete";
 import { BoutonExport } from "./composants/Export";
 import { Legende } from "./composants/Legende";
-import { PageJt } from "./composants/PageJt";
 import { PageMethode } from "./composants/PageMethode";
 import { PageProprietaires } from "./composants/PageProprietaires";
 import { Panneau } from "./composants/Panneau";
@@ -58,8 +57,6 @@ function Contenu({ donnees: g }: { donnees: Graphe }) {
       return <PageMethode />;
     case "tableau":
       return <PageTableau donnees={g} />;
-    case "jt":
-      return <PageJt donnees={g} />;
     case "proprietaires":
       return <PageProprietaires donnees={g} />;
     default:

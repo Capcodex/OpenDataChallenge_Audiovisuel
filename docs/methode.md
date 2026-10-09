@@ -117,6 +117,8 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 
 ## 8. Le module JT : de quoi parlent les JT du soir (2000-2020)
 
+*Depuis la version 2, ce module n'est plus affiché sur le site. Ses données restent calculées et publiées dans `graph.json` (bloc `jt`) ; cette section décrit leur calcul.*
+
 **Source :** INA, baromètre thématique des journaux télévisés, Licence Ouverte. Les sujets des JT du soir de TF1, France 2, France 3, Arte et M6, jour par jour, de 2000 à 2020. Chaque sujet est classé dans **une seule** des 14 rubriques par l'INA. Les données s'arrêtent au 31 décembre 2020, et Canal+ n'est pas couverte.
 
 - **Profil d'une chaîne** : part de chaque rubrique dans ses JT, en nombre de sujets ou en durée, par année ou par période.

@@ -145,10 +145,13 @@ jobs:
           curl -s http://localhost:8080/media/le-monde/ | grep -q '<div id="app">'
           curl -s http://localhost:8080/data/graph.json | grep -q '"format":1'
           # Pages pré-générées (T-069, T-070) : servies directement, avec leurs balises.
-          for page in methode tableau jt proprietaires; do
+          for page in methode tableau proprietaires; do
             test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/$page)" = 200
           done
           curl -s http://localhost:8080/methode | grep -q 'Ce que la carte ne mesure pas'
+          # Page JT retirée en V2 : redirection permanente vers la carte.
+          curl -sI http://localhost:8080/jt | tee jt.txt | grep -q "^HTTP/1.1 301"
+          grep -qi "^location: /\s*$" jt.txt
           curl -s http://localhost:8080/media/le-monde/ | grep -q 'property="og:title" content="Le Monde'
           docker compose down
 
