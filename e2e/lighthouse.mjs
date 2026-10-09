@@ -31,7 +31,6 @@ const PAGES = [
   ["/proprietaires", BUDGET_CARTE],
   ["/methode", BUDGET],
   ["/tableau", BUDGET],
-  ["/jt", BUDGET],
 ];
 const PASSAGES = 3;
 const mediane = (valeurs) =>

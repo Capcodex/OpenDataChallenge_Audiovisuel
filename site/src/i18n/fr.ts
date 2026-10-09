@@ -33,11 +33,6 @@ export const fr = {
       description:
         "Choisir un propriétaire pour voir ses médias sur la carte des publics, avec la source de chaque donnée de propriété.",
     },
-    jt: {
-      titre: "De quoi parlent les JT du soir (2000-2020) · Graphe des médias",
-      description:
-        "Part de chaque rubrique dans les JT du soir de TF1, France 2, France 3, Arte et M6, et proximité des chaînes, d'après les données de l'INA.",
-    },
     methode: {
       titre: "Méthode · Graphe des médias",
       description:
@@ -59,7 +54,6 @@ export const fr = {
     libelle: "Navigation principale",
     carte: "Carte",
     proprietaires: "Propriétaires",
-    jt: "JT 2000-2020",
     methode: "Méthode",
     donnees: "Données",
   },
@@ -121,40 +115,6 @@ export const fr = {
     choisir: "Choisissez un propriétaire dans la liste.",
     nonIdentifies: (n: number) =>
       `${n} médias de la carte n'ont pas de propriétaire identifié dans la base (presse indépendante, médias en ligne, créateurs).`,
-  },
-
-  jt: {
-    titre: "De quoi parlent les JT du soir ?",
-    introduction:
-      "Répartition des sujets des journaux télévisés du soir de cinq chaînes entre 14 rubriques thématiques, et proximité de leurs profils éditoriaux. Données INA, 2000-2020.",
-    // EF-M5-03 : limites rappelées en permanence.
-    avertissement:
-      "Données closes au 31 décembre 2020. Canal+ n'est pas couverte. Chaque sujet est classé dans une seule rubrique par l'INA.",
-    mesure: "Mesure",
-    mesures: { sujets: "Nombre de sujets", duree: "Durée" } as Record<string, string>,
-    annee: "Année",
-    periode: "Période",
-    profilTitre: (mesure: string, annee: number) =>
-      `Part de chaque rubrique (${mesure.toLowerCase()}, ${annee})`,
-    legende: "Rubriques : cliquer pour isoler",
-    autres: "Autres rubriques",
-    toutes: "Toutes les rubriques",
-    lectureProfil:
-      "Les 7 rubriques les plus fréquentes de l'année sont détaillées ; les 7 autres sont regroupées. Cliquez sur une rubrique pour l'isoler.",
-    profilChaine: (chaine: string, parts: string) => `${chaine} : ${parts}.`,
-    isoleeTitre: (rubrique: string, annee: number) =>
-      `${rubrique} : part dans les JT de chaque chaîne (${annee})`,
-    similariteTitre: (periode: string) => `Proximité des profils éditoriaux (${periode})`,
-    similariteLegende: "Similarité des profils éditoriaux entre chaînes",
-    echelle: "1 = profils identiques",
-    singuliere: (chaine: string, moyenne: string, autres: string) =>
-      `${chaine} a le profil le plus singulier sur cette période : similarité moyenne de ${moyenne} avec les autres chaînes, contre ${autres} en moyenne entre les quatre autres.`,
-    definition:
-      "Similarité = 1 − distance de Jensen-Shannon entre les répartitions des 14 rubriques, calculée par le pipeline sur toute la période.",
-    source:
-      "Source : INA, baromètre thématique des journaux télévisés, 2000-2020 (Licence Ouverte).",
-    rappel:
-      "Ce module décrit des choix éditoriaux (de quoi parlent les JT), à la différence de la carte, qui décrit des publics.",
   },
 
   methode: {

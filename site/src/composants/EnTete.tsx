@@ -7,7 +7,6 @@ import { Recherche } from "./Recherche";
 const PAGES: { cle: keyof typeof fr.navigation; page: Page }[] = [
   { cle: "carte", page: "carte" },
   { cle: "proprietaires", page: "proprietaires" },
-  { cle: "jt", page: "jt" },
   { cle: "methode", page: "methode" },
   { cle: "donnees", page: "tableau" },
 ];

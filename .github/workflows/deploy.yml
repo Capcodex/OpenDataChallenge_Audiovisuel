@@ -149,8 +149,11 @@ jobs:
             --revision-suffix="$suffixe-${GITHUB_SHA::7}-$GITHUB_RUN_ATTEMPT" \
             --service-account="graphe-medias-site@$PROJET.iam.gserviceaccount.com" \
             --memory=256Mi --cpu=1 --min-instances=0 --max-instances=3 --quiet
-          numero=$(gcloud projects describe "$PROJET" --format='value(projectNumber)')
-          echo "url=https://$SERVICE-$numero.$REGION.run.app" >> "$GITHUB_OUTPUT"
+          # Adresse publiée (liens permanents, mention de source) : la source de vérité est
+          # config/params.yaml, et c'est elle que la vérification doit atteindre.
+          url=$(sed -n 's/^ *adresse_site: *"\([^"]*\)".*/\1/p' config/params.yaml)
+          test -n "$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Vérifier la production
         env:

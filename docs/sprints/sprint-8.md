@@ -25,7 +25,7 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 | T-085 | Publication du dépôt | ✅ | README (démarrage sur un poste neuf, production), `CONTRIBUTING.md`, licences inchangées |
 | T-086 | Méthode avec les résultats réels | ✅ | Chiffres déjà réels depuis le sprint 7 ; désormais garantis par `tests/data/test_methode_publiee.py` |
 | T-087 | `deploy.yml` : images multi-architecture, production | ✅ | Étiquette `v*.*.*` sur `main` → ghcr.io (`amd64`, `arm64`) → copie dans Artifact Registry → déploiement → vérification → retour arrière automatique |
-| T-088 | Vérifications en production | 🟡 | `scripts/verifier-production.sh` (lancé par le déploiement) ; liste de contrôle à cocher après `v1.0.0` |
+| T-088 | Vérifications en production | ✅ | `v1.0.0` en ligne, 23 vérifications vertes ; restent Observatory, aperçu de lien, paquets ghcr.io |
 
 ## Décisions prises
 
@@ -45,6 +45,7 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 | HSTS absent des en-têtes | Ajouté à `docker/nginx-entetes.conf` |
 | Tests du site qui écrivaient l'adresse en dur | Adresse lue dans `graph.json` |
 | `docs/methode.md` absent du conteneur `pipeline` (nouveau test) | Montage en lecture seule dans `compose.yaml` |
+| Premier déploiement : l'étape de calcul de l'adresse appelait l'API Cloud Resource Manager, non activée ; retour arrière automatique vers la page de démonstration | Adresse lue dans `config/params.yaml` ; révision `v1.0.0` vérifiée puis mise en service à la main ; site en ligne |
 | CI : performance Lighthouse 84 et 79 sur la fiche et les propriétaires (WebGL émulé) | Survol des liens activé à la première approche de la souris (il doublait chaque rendu), centrage initial sans animation : blocage réduit d'un quart ; seuil de 75 pour les pages avec carte dans la CI |
 
 ## Écarts au backlog
@@ -58,8 +59,9 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 
 ## Restant à faire hors code
 
-- [ ] `terraform apply` dans `infra/` : service de production (2 créations).
-- [ ] Fusionner la pull request du sprint 8, puis poser l'étiquette `v1.0.0` sur `main`.
+- [x] `terraform apply` dans `infra/` : service de production (2 créations).
+- [x] Fusionner la pull request du sprint 8, puis poser l'étiquette `v1.0.0` sur `main`.
+- [ ] Fusionner le correctif du workflow et poser `v1.0.1` (valide le déploiement automatique de bout en bout).
 - [ ] Cocher la liste de contrôle de mise en production (`docs/recette.md`, § 5).
 - [ ] Mener les tests avec 5 utilisateurs, dont Firefox et Safari.
 - [ ] Toujours en attente : test H5 (noms des familles), saisies sourcées de propriété, GEXF dans Gephi, recherche utilisateur R-01.

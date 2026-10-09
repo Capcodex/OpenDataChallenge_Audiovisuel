@@ -9,7 +9,7 @@ describe("pages", () => {
     ["/methode", "methode"],
     ["/methode/", "methode"],
     ["/tableau", "tableau"],
-    ["/jt", "jt"],
+    ["/jt", "carte"], // page retirée en V2 : redirigée vers la carte par nginx
     ["/proprietaires/", "proprietaires"],
   ])("%s → %s", (chemin, page) => {
     expect(pageDepuisChemin(chemin)).toBe(page);

@@ -12,7 +12,7 @@ Référence : cahier des charges fonctionnel § 12 et exigences non fonctionnell
 | Fonctionnelle (§ 12.2, T-082) | ✅ 4 scénarios automatisés · ⏳ tests avec 5 utilisateurs à mener |
 | Conformité (§ 12.3, T-083) | ✅ 4 critères sur 4 · ⏳ navigateurs autres que Chromium à vérifier à la main |
 | Anomalies (T-084) | ✅ 0 bloquante, 0 majeure ouverte (3 corrigées) · 7 mineures reportées en V2 |
-| Mise en production (T-088) | ⏳ liste de contrôle à cocher après le déploiement de `v1.0.0` |
+| Mise en production (T-088) | ✅ `v1.0.0` en ligne le 9 octobre 2026 · ⏳ Observatory, aperçu de lien, paquets ghcr.io à cocher |
 
 ## 1. Recette des données (§ 12.1, T-081)
 
@@ -100,12 +100,14 @@ Critères : **4 testeurs sur 5** réussissent chaque scénario ; **4 sur 5** ref
 
 À cocher après le déploiement de `v1.0.0` (workflow « Mise en production »). Les lignes marquées 🤖 sont vérifiées automatiquement par `scripts/verifier-production.sh` à chaque déploiement.
 
-- [ ] 🤖 HTTPS : https://graphe-medias-718967467429.europe-west9.run.app répond 200
-- [ ] 🤖 En-têtes de sécurité : CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP
+- [x] 🤖 HTTPS : https://graphe-medias-718967467429.europe-west9.run.app répond 200 (9 octobre 2026)
+- [x] 🤖 En-têtes de sécurité : CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP
 - [ ] Mozilla Observatory (https://developer.mozilla.org/fr/observatory) : note ≥ B+, capture jointe
-- [ ] 🤖 Healthcheck : pages, données et téléchargements répondent 200 ; page absente → 404
-- [ ] 🤖 Liens permanents : `/media/le-monde` et `/media/le-monde/` ; `og:url` et `adresse_site` = adresse de production
+- [x] 🤖 Healthcheck : pages, données et téléchargements répondent 200 ; page absente → 404
+- [x] 🤖 Liens permanents : `/media/le-monde` et `/media/le-monde/` ; `og:url` et `adresse_site` = adresse de production
 - [ ] Aperçu d'un lien de fiche collé dans une messagerie ou un réseau social : titre et description corrects
 - [ ] Paquets ghcr.io `graphe-medias-site` et `graphe-medias-pipeline` publics, en `amd64` et `arm64`
-- [ ] Révision précédente notée pour un retour arrière : `………………` (résumé du workflow)
+- [x] Révision précédente notée pour un retour arrière : `graphe-medias-00001-9m7` (image de démonstration). Version en service : `graphe-medias-v1-0-0-10d9c0e-1`
 - [ ] Étiquette `demo` du service d'aperçu retirée (`gcloud run services update-traffic graphe-medias-apercu --region europe-west9 --remove-tags demo`)
+
+**Incident du premier déploiement (9 octobre 2026).** La révision `v1.0.0` a été créée, mais l'étape suivante du workflow a échoué : le calcul de l'adresse appelait l'API Cloud Resource Manager, non activée sur le projet. Le retour arrière automatique a rendu le trafic à la page de démonstration, comme prévu. La révision, vérifiée sur une adresse temporaire sans trafic (tous contrôles verts), a ensuite été mise en service à la main. Correctif : le workflow lit l'adresse dans `config/params.yaml`, validé par le déploiement de `v1.0.1`.
