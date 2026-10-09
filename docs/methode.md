@@ -1,10 +1,13 @@
 # Méthode
 
-*Source de la page « Méthode » du site (rédaction finale au sprint 7). Ce document est mis à jour à chaque modification d'un calcul ou d'un seuil. Les paramètres cités sont dans [`config/params.yaml`](../config/params.yaml).*
+<!--
+Source de la page « Méthode » du site (/methode), convertie au build (site/scripts/methode.ts) :
+ce fichier est la seule version du texte. Il est mis à jour à chaque modification d'un calcul ou
+d'un seuil ; les paramètres cités sont dans config/params.yaml. Les liens relatifs pointent vers
+le dépôt public. Rédaction finale : sprint 7.
+-->
 
-État : **sprint 5**. Données, liens de co-audience, profils des publics, familles, disposition de la carte, propriété et module JT.
-
----
+La carte rapproche les médias suivis par les mêmes personnes. Elle décrit des **publics**, pas des lignes éditoriales ni des opinions de rédactions. Cette page explique d'où viennent les chiffres, comment ils sont calculés et ce qu'ils ne disent pas. Tous les paramètres sont dans [`config/params.yaml`](../config/params.yaml).
 
 ## 1. Les données
 
@@ -123,13 +126,22 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 
 Ce module décrit des **choix éditoriaux** (de quoi parlent les JT), à la différence de la carte, qui décrit des **publics**.
 
-## 9. Ce qui n'est jamais publié
+## 9. Ce que la carte ne mesure pas
+
+- **La ligne éditoriale d'un média.** Deux médias reliés ont des publics qui se recoupent ; ils peuvent traiter l'actualité de façon très différente. Le positionnement politique affiché est celui du public, jamais celui du média.
+- **Les audiences réelles.** Le baromètre est une enquête déclarative : il mesure ce que les personnes disent suivre, pas les audiences mesurées par Médiamétrie.
+- **Les médias régionaux un par un.** L'enquête les regroupe en « un journal régional ou local » ou « une radio locale » : ils ne peuvent pas être affichés séparément.
+- **Les petits médias.** Sous 50 répondants, un média n'a pas d'indicateurs ; entre 50 et 99, ses chiffres sont fragiles.
+- **L'évolution dans le temps.** L'édition 2024 du baromètre ne pose pas les questions de la même façon : la comparaison entre éditions n'est pas encore possible.
+- **Les distances sur la carte.** La position des points aide à lire les liens ; seuls les liens et leur lift sont des mesures.
+
+## 10. Ce qui n'est jamais publié
 
 - Aucune réponse individuelle : les tables par répondant ne quittent pas le pipeline.
 - Aucun lien appuyé sur moins de 30 répondants communs, aucun indicateur de média sous 50 répondants, aucune confiance sous 50 réponses.
 - Aucun effectif sans l'indicateur qu'il accompagne : quand un indicateur n'est pas publié, son effectif ne l'est pas non plus.
 
-## 10. Paramètres (édition 2026)
+## 11. Paramètres (édition 2026)
 
 | Paramètre | Valeur | Règle |
 |---|---|---|
@@ -153,3 +165,13 @@ Ce module décrit des **choix éditoriaux** (de quoi parlent les JT), à la diff
 | `publication.date_traitement` | 2026-10-08 | Mention de source (RG-24) |
 | `jt.periodes` | 2000-2020, 2000-2004, 2005-2009, 2010-2014, 2015-2020 | Module JT |
 | `seed` | 20261008 | Reproductibilité |
+
+## 12. Sources, code et licences
+
+| Source | Producteur | Licence |
+|---|---|---|
+| Les Français et l'information, baromètre 2026 | Arcom | Licence Ouverte v2.0 |
+| Baromètre thématique des JT, 2000-2020 | INA | Licence Ouverte |
+| Médias français : qui possède quoi (version du 17 décembre 2024) | Le Monde diplomatique, Acrimed | ODC-By v1.0 |
+
+Le code du pipeline et du site est public : [dépôt du projet](https://github.com/Capcodex/OpenDataChallenge_Audiovisuel). Les données agrégées sont téléchargeables depuis la [page Données](/tableau), avec un [dictionnaire des colonnes](/telechargements/dictionnaire.md). Une exécution du pipeline sur un poste neuf reproduit ces fichiers à l'identique.

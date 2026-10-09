@@ -241,6 +241,11 @@ export function FicheInsuffisante({
         </svg>
         <p>{fr.etats.effectifInsuffisant(seuils(g).affichable)}</p>
       </div>
+      <p>
+        <a href="/methode#quels-medias-apparaissent">
+          {fr.etats.pourquoiSeuil(seuils(g).affichable)}
+        </a>
+      </p>
     </>
   );
 }

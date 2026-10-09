@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from "preact/hooks";
 
-import { donnees, ouvrir } from "../etat/magasin";
+import { donnees, ouvrir, page } from "../etat/magasin";
 import { fr } from "../i18n/fr";
 import { construireIndex, LONGUEUR_MIN, type Resultat } from "../recherche/recherche";
 import { normaliser } from "../texte/normaliser";
@@ -31,6 +31,10 @@ export function Recherche() {
   const listeVisible = ouverte && assezLongue && index !== null;
 
   const choisir = (r: Resultat) => {
+    if (page.value !== "carte") {
+      location.assign(`/media/${r.id}`);
+      return;
+    }
     ouvrir(r.id, "recherche");
     setRequete("");
     setOuverte(false);

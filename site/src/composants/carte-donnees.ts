@@ -16,6 +16,8 @@ export const REGLAGES_SIGMA = {
   labelRenderedSizeThreshold: 8,
   minCameraRatio: 0.1,
   maxCameraRatio: 2,
+  // Survol des liens : phrase d'explication (E3-05, RG-22).
+  enableEdgeEvents: true,
 } as const;
 
 // Jetons de design (styles/jetons.css) ; Sigma dessine en WebGL et ne lit pas les variables CSS.
@@ -53,7 +55,12 @@ export function construireGraphe(g: Graphe): Graph {
   }
   for (const e of g.edges) {
     if (e.shown) {
-      graphe.addEdge(e.s, e.t, { size: epaisseurLien(e.lift), color: COULEUR_LIEN });
+      graphe.addEdge(e.s, e.t, {
+        size: epaisseurLien(e.lift),
+        color: COULEUR_LIEN,
+        lift: e.lift,
+        communs: e.n,
+      });
     }
   }
   return graphe;
