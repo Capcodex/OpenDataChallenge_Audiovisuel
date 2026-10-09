@@ -175,3 +175,32 @@ PROPRIETES = pa.DataFrameSchema(
     strict=True,
     name="proprietes",
 )
+
+JT_PROFILS = pa.DataFrameSchema(
+    {
+        "chaine": pa.Column(str, pa.Check.isin(["TF1", "France 2", "France 3", "Arte", "M6"])),
+        "annee": pa.Column("int64", pa.Check.in_range(2000, 2020)),
+        "rubrique": pa.Column(str),
+        "n_sujets": pa.Column("int64", pa.Check.ge(0)),
+        "duree_s": pa.Column("int64", pa.Check.ge(0)),
+        "part_sujets": _part(),
+        "part_duree": _part(),
+    },
+    unique=["chaine", "annee", "rubrique"],
+    strict=True,
+    name="jt_profils",
+)
+
+JT_SIMILARITES = pa.DataFrameSchema(
+    {
+        "chaine_a": pa.Column(str),
+        "chaine_b": pa.Column(str),
+        "periode": pa.Column(str, pa.Check.str_matches(r"^\d{4}-\d{4}$")),
+        "mesure": pa.Column(str, pa.Check.isin(["sujets", "duree"])),
+        "similarite_js": _part(),
+        "synchronisation": pa.Column("float64", pa.Check.in_range(-1, 1)),
+    },
+    unique=["chaine_a", "chaine_b", "periode", "mesure"],
+    strict=True,
+    name="jt_similarites",
+)

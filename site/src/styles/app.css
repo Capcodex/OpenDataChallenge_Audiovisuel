@@ -1,0 +1,317 @@
+/* Mise en page de l'application (maquette « Carte et fiche »). Valeurs : styles/jetons.css. */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* En-tête et navigation */
+.en-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-6) var(--espace-9);
+  padding: var(--espace-5) var(--espace-8);
+  background: var(--couleur-surface);
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.en-tete__marque {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-4);
+  color: var(--couleur-texte);
+  font-size: var(--taille-18);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.en-tete__marque svg {
+  stroke: var(--couleur-texte);
+  stroke-width: 2;
+}
+
+.en-tete__navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+}
+
+.en-tete__lien {
+  padding: var(--espace-4) var(--espace-5);
+  border-radius: var(--rayon-moyen);
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-14);
+  text-decoration: none;
+}
+
+.en-tete__lien[aria-current="page"] {
+  background: var(--couleur-accent-clair);
+  color: var(--couleur-accent-fonce);
+  font-weight: 600;
+}
+
+.en-tete__lien[aria-disabled="true"] {
+  color: var(--couleur-texte-discret);
+  cursor: default;
+}
+
+/* Bandeau de lecture (RG-21) */
+.bandeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-3) var(--espace-6);
+  padding: var(--espace-4) var(--espace-8);
+  background: var(--couleur-surface);
+  border-bottom: 1px solid var(--couleur-bordure);
+  font-size: var(--taille-14);
+}
+
+.bandeau__edition {
+  padding: var(--espace-1) var(--espace-4);
+  border-radius: var(--rayon-pastille);
+  background: var(--couleur-fond);
+  font-family: var(--police-chiffres);
+  font-size: var(--taille-12);
+}
+
+.bandeau__texte {
+  margin: 0;
+}
+
+/* Zone principale : carte et panneau */
+.principal {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-6);
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--espace-7) var(--espace-8);
+}
+
+.principal__carte {
+  flex: 999 1 640px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-5);
+}
+
+.message {
+  margin: var(--espace-9) auto;
+  color: var(--couleur-texte-secondaire);
+}
+
+.carte {
+  position: relative;
+  height: min(70vh, 720px);
+  min-height: 420px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-carte);
+  overflow: hidden;
+}
+
+.carte__rendu {
+  position: absolute;
+  inset: 0;
+}
+
+.carte--indisponible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espace-8);
+  text-align: center;
+}
+
+.carte__commandes {
+  position: absolute;
+  top: var(--espace-5);
+  right: var(--espace-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+}
+
+.carte__commandes button {
+  width: var(--cible-min);
+  height: var(--cible-min);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font-size: var(--taille-20);
+  cursor: pointer;
+}
+
+/* Légende (E1-02) */
+.legende {
+  padding: var(--espace-5) var(--espace-6);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-carte);
+}
+
+.legende__titre {
+  margin: 0 0 var(--espace-3);
+  font-size: var(--taille-14);
+}
+
+.legende__familles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legende__famille {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-3);
+  min-height: var(--cible-min);
+  padding: 0 var(--espace-5);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font: inherit;
+  font-size: var(--taille-14);
+  cursor: pointer;
+}
+
+.legende__famille[aria-pressed="true"] {
+  border-color: var(--couleur-texte);
+  background: var(--couleur-fond);
+}
+
+.legende__pastille {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legende__taille,
+.legende__lecture,
+.legende__sans-familles {
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-12);
+}
+
+.legende__lecture,
+.legende__sans-familles {
+  margin: var(--espace-3) 0 0;
+}
+
+/* Panneau latéral */
+.panneau {
+  flex: 1 1 320px;
+  max-width: 420px;
+  min-width: 0;
+  align-self: flex-start;
+  padding: var(--espace-7);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-carte);
+  font-size: var(--taille-14);
+}
+
+.panneau h2 {
+  margin: 0 0 var(--espace-3);
+  font-size: var(--taille-22);
+  line-height: var(--interligne-titre);
+}
+
+.panneau h3 {
+  margin: var(--espace-6) 0 var(--espace-3);
+  font-size: var(--taille-15);
+}
+
+.panneau__type {
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-12);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.panneau__reperes {
+  padding-left: var(--espace-7);
+}
+
+.panneau__discret {
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-12);
+}
+
+.panneau__effectif {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-3);
+  align-items: center;
+  font-family: var(--police-chiffres);
+  font-size: var(--taille-12);
+}
+
+.badge-fragile {
+  padding: var(--espace-1) var(--espace-4);
+  border: 1px solid var(--couleur-alerte-bordure);
+  border-radius: var(--rayon-pastille);
+  background: var(--couleur-alerte-fond);
+  color: var(--couleur-alerte-texte);
+  font-family: var(--police-texte);
+}
+
+.panneau__voisins {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panneau__voisins li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--espace-4);
+  align-items: center;
+  min-height: var(--cible-min);
+  border-bottom: 1px solid var(--couleur-surface-discrete);
+}
+
+.panneau__voisins button,
+.panneau__fermer {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--couleur-accent);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panneau__fermer {
+  min-height: var(--cible-min);
+  margin-top: var(--espace-5);
+}
+
+.panneau__chiffre {
+  color: var(--couleur-texte-secondaire);
+  font-family: var(--police-chiffres);
+  font-size: var(--taille-12);
+}
+
+/* Pied de page (sources, EF-M6-05) */
+.pied {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-1);
+  padding: var(--espace-6) var(--espace-8);
+  border-top: 1px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-12);
+}

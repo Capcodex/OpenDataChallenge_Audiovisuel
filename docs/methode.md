@@ -2,7 +2,7 @@
 
 *Source de la page « Méthode » du site (rédaction finale au sprint 7). Ce document est mis à jour à chaque modification d'un calcul ou d'un seuil. Les paramètres cités sont dans [`config/params.yaml`](../config/params.yaml).*
 
-État : **sprint 4**. Données, liens de co-audience, profils des publics, familles, disposition de la carte et propriété. Le module JT sera ajouté au sprint 5.
+État : **sprint 5**. Données, liens de co-audience, profils des publics, familles, disposition de la carte, propriété et module JT.
 
 ---
 
@@ -112,13 +112,24 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 - Les journaux télévisés ont les propriétaires de leur chaîne.
 - Les médias absents de la base sont indiqués comme **« propriétaire non identifié »**. C'est le cas de la presse indépendante, des médias en ligne et des créateurs de contenu : 16 médias en 2026. Aucune information de propriété n'est publiée sans source.
 
-## 8. Ce qui n'est jamais publié
+## 8. Le module JT : de quoi parlent les JT du soir (2000-2020)
+
+**Source :** INA, baromètre thématique des journaux télévisés, Licence Ouverte. Les sujets des JT du soir de TF1, France 2, France 3, Arte et M6, jour par jour, de 2000 à 2020. Chaque sujet est classé dans **une seule** des 14 rubriques par l'INA. Les données s'arrêtent au 31 décembre 2020, et Canal+ n'est pas couverte.
+
+- **Profil d'une chaîne** : part de chaque rubrique dans ses JT, en nombre de sujets ou en durée, par année ou par période.
+- **Proximité de deux chaînes** : 1 − distance de Jensen-Shannon entre leurs profils sur les 14 rubriques. 1 = profils identiques, 0 = aucune rubrique en commun. Sur 2000-2020, les quatre chaînes généralistes ont des profils très proches (0,90 à 0,96). Arte se distingue nettement (0,60 à 0,66), avec une place beaucoup plus grande à l'international.
+- **Synchronisation** : corrélation, jour par jour, du volume de chaque rubrique entre deux chaînes, moyennée sur les rubriques. Elle indique si les deux JT traitent les mêmes thèmes les mêmes jours. Calculée sur les jours où les deux chaînes ont diffusé.
+- Périodes : 2000-2020, et 4 sous-périodes de 5 ou 6 ans (`jt.periodes`).
+
+Ce module décrit des **choix éditoriaux** (de quoi parlent les JT), à la différence de la carte, qui décrit des **publics**.
+
+## 9. Ce qui n'est jamais publié
 
 - Aucune réponse individuelle : les tables par répondant ne quittent pas le pipeline.
 - Aucun lien appuyé sur moins de 30 répondants communs, aucun indicateur de média sous 50 répondants, aucune confiance sous 50 réponses.
 - Aucun effectif sans l'indicateur qu'il accompagne : quand un indicateur n'est pas publié, son effectif ne l'est pas non plus.
 
-## 9. Paramètres (édition 2026)
+## 10. Paramètres (édition 2026)
 
 | Paramètre | Valeur | Règle |
 |---|---|---|
@@ -140,4 +151,5 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 | `ponts_nombre` | 10 | ADR-007 |
 | `layout.iterations` | 2 000 | ADR-008 |
 | `publication.date_traitement` | 2026-10-08 | Mention de source (RG-24) |
+| `jt.periodes` | 2000-2020, 2000-2004, 2005-2009, 2010-2014, 2015-2020 | Module JT |
 | `seed` | 20261008 | Reproductibilité |

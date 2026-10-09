@@ -60,6 +60,27 @@ export const fr = {
     titre: "Familles de médias",
     lecture: "Taille du point = part du public. Épaisseur du lien = proximité des publics.",
     famille: (numero: number) => `Famille ${numero}`,
+    taille: (n: number) => `${n} médias`,
+    sansFamilles: "Familles non affichées pour cette édition (regroupements pas assez stables).",
+    filtrerFamille: (libelle: string) => `Afficher seulement : ${libelle}`,
+    toutes: "Toutes les familles",
+  },
+
+  carte: {
+    libelle:
+      "Carte des médias : chaque point est un média, deux médias reliés partagent leur public",
+    zoomer: "Zoomer",
+    dezoomer: "Dézoomer",
+    recentrer: "Recentrer la carte",
+    filtresTypes: "Types de médias",
+    tousTypes: "Tous",
+    bientot: "Disponible prochainement",
+  },
+
+  pied: {
+    sources: "Sources",
+    traitement: (date: string) => `Données traitées le ${date}`,
+    licence: "Données agrégées publiées sous Licence Ouverte. Aucune réponse individuelle.",
   },
 
   accueil: {
@@ -71,6 +92,8 @@ export const fr = {
       "Les couleurs indiquent des familles de médias détectées automatiquement.",
       "Chaque chiffre indique son effectif et sa marge d'incertitude.",
     ],
+    resume: (medias: number, liens: number) =>
+      `${entier.format(medias)} médias · ${entier.format(liens)} liens tracés`,
   },
 
   fiche: {

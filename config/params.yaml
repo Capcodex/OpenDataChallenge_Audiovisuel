@@ -54,3 +54,12 @@ communautes:
 layout:
   algorithme: forceatlas2
   iterations: 2000
+
+# Module JT (E0-09, CdC technique § 7.8) : périodes de comparaison des profils éditoriaux.
+jt:
+  periodes:
+    - [2000, 2020]
+    - [2000, 2004]
+    - [2005, 2009]
+    - [2010, 2014]
+    - [2015, 2020]

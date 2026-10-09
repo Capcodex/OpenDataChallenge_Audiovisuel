@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Projet** | Graphe des médias français |
-| **Version du document** | 0.4 — fin du sprint 4 |
+| **Version du document** | 0.5 — fin du sprint 5 |
 | **Date** | 8 octobre 2026 |
 | **Auteur** | Alexandre Masson |
 | **Statut** | En construction : complété à chaque sprint |
@@ -81,7 +81,7 @@ Les documents de conception sont dans le dossier parent `Data Viz/`.
 | # | Principe | Statut |
 |---|---|---|
 | A1 | **Tout est calculé à l'avance** : liens, familles, disposition de la carte. Le site ne fait aucun calcul statistique. | ✅ liens, attributs, familles, disposition |
-| A2 | **Site statique** servi par nginx ; pas de serveur applicatif ni de base en production. | 🟡 Image nginx ✅ ; contenu S5-S6 |
+| A2 | **Site statique** servi par nginx ; pas de serveur applicatif ni de base en production. | ✅ carte en place ; fiche, recherche S6 |
 | A3 | **Une seule source de vérité** : les fichiers Parquet de `data/output/`. Tout le reste en dérive. | ✅ |
 | A4 | **Reproductible de bout en bout** : une commande régénère tout depuis les sources brutes. | ✅ |
 | A5 | **Aucune donnée individuelle hors du pipeline.** | ✅ |
@@ -161,7 +161,7 @@ flowchart TB
 |---|---|---|---|
 | `pipeline` | `docker/pipeline.Dockerfile` (python:3.12-slim + uv) | Téléchargement, préparation, calculs, exports, tests Python | ✅ |
 | `site-dev` | `docker/site.Dockerfile`, cible `dev` (node:24-slim) | Serveur de développement Vite, Vitest, ESLint, Prettier | ✅ |
-| `site` | `docker/site.Dockerfile`, cible `runtime` (nginx-unprivileged alpine-slim) | Site de production | ✅ squelette (contenu S5-S6) |
+| `site` | `docker/site.Dockerfile`, cible `runtime` (nginx-unprivileged alpine-slim) | Site de production | ✅ carte (fiche, recherche S6) |
 | `e2e` | image Playwright officielle | Tests de bout en bout, accessibilité, performance | 🔜 S6 |
 | `neo4j` | `neo4j:5-community` (5.26, figée par empreinte), profil `analyse` | Requêtes Cypher pour l'analyse et les chercheurs | ✅ S4 |
 
@@ -219,7 +219,8 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `familles` | `compute/familles.py` | `repondant_media`, `medias.parquet`, `liens.parquet`, `params.yaml` | `familles.parquet`, `journal_familles.json` | ✅ S3 |
 | `disposition` | `compute/disposition.py` | `medias.parquet`, `liens.parquet` (liens affichés), `params.yaml` | `disposition.parquet` | ✅ S3 |
 | `proprietes` | `prepare/proprietes.py` | base Médias français, `proprietes_corrections.csv`, `medias.parquet` | `proprietes.parquet`, `journal_proprietes.json` | ✅ S4 |
-| `jt` | `prepare/jt.py` | CSV INA | `jt_profiles.parquet`, `jt_similarity.parquet` | 🔜 S5 |
+| `jt` | `prepare/jt.py` | CSV INA | `jt_profils.parquet`, `interim/jt_quotidien.parquet` | ✅ S5 |
+| `jt_similarites` | `compute/jt.py` | `jt_profils`, `jt_quotidien`, `params.yaml` | `jt_similarites.parquet` | ✅ S5 |
 | `export_site` | `export/site_json.py` | sorties agrégées, `site/src/graph/schema.json` | `site/public/data/graph.json` (validé) | ✅ S4 |
 | `telechargements` | `export/telechargements.py` | sorties agrégées | `site/public/telechargements/*` (CSV, Parquet, GEXF, dictionnaire) | ✅ S4 |
 | `journal` | `export/journal.py` | journaux des étapes, manifeste | `run_log.json`, `telechargements/journal.json` | ✅ S4 |
@@ -274,7 +275,8 @@ Une entrée manquante arrête le pipeline avec un message explicite (code de sor
 | `output/journal_coaudience` (JSON) | — | paires testées, gardées, rejetées par motif ; lift de référence | ✅ S2 |
 | `output/proprietes` | (`media_id`, `proprietaire_id`) | `groupe`, `proprietaire`, `type_proprietaire`, `part` effective, `statut`, `source`, `date` | ✅ S4 |
 | `output/run_log` (JSON) | — | journal complet d'une exécution (EF-FT-10) | ✅ S4 |
-| `output/jt_*` | — | voir CdCT § 8.1 | 🔜 S5 |
+| `output/jt_profils` | (`chaine`, `annee`, `rubrique`) | `n_sujets`, `duree_s`, `part_sujets`, `part_duree` | ✅ S5 |
+| `output/jt_similarites` | (`chaine_a`, `chaine_b`, `periode`, `mesure`) | `similarite_js`, `synchronisation` | ✅ S5 |
 
 ### 7.4 Référentiel des médias
 
@@ -344,8 +346,8 @@ Le cache de uv est monté pendant le build (`--mount=type=cache`) et n'entre pas
 |---|---|---|
 | Local | `docker compose` sur Docker Desktop (macOS arm64) | ✅ |
 | CI | GitHub Actions, `ubuntu-latest` (amd64) | ✅ |
-| Aperçu | Image `site` de chaque pull request, URL temporaire | 🔜 S5 |
-| Production | Image `site` sur une plateforme de conteneurs (Scaleway Serverless Containers ou Google Cloud Run, décision D3) | 🔜 S8 |
+| Aperçu | Image `site` de chaque pull request : révision étiquetée `pr-<n>` du service Cloud Run `graphe-medias-apercu` (`europe-west9`), URL publiée dans la PR | 🟡 workflow `preview.yml` prêt, accès Google Cloud à créer ([deploiement.md](deploiement.md)) |
+| Production | Image `site` sur Google Cloud Run, service `graphe-medias` ([ADR-010](decisions/ADR-010-hebergement-cloud-run.md)) | 🔜 S8 |
 
 ### 8.4 Chaîne CI/CD
 
@@ -354,6 +356,7 @@ Le cache de uv est monté pendant le build (`--mount=type=cache`) et n'entre pas
 | `ci.yml` | pull request, push sur `main` | **dockerfiles** : hadolint · **pipeline** : image → taille → Trivy → lint → tests unitaires → pipeline complet → tests sur les données → `check` · **site** : image `dev` → Vitest, lint, build → vocabulaire → image `runtime` → Trivy → taille < 50 Mo → healthcheck, en-têtes, 404 | ✅ verte depuis le 08/10/2026 |
 | `pipeline.yml` | manuel | pipeline complet → tests sur les données → `check` → pull request automatique de `site/public` | ✅ S4 (non encore lancé) |
 | `reproducibility.yml` | hebdomadaire (lundi) | deux exécutions forcées, mêmes sha256 ; sorties versionnées = sorties régénérées | ✅ S4 (non encore lancé) |
+| `preview.yml` | pull request | Workload Identity Federation → image `site` → Artifact Registry → révision Cloud Run étiquetée `pr-<n>`, sans trafic → vérification (CSP, lien direct, < 3 s) → URL en commentaire ; étiquette retirée à la fermeture | 🟡 S5, inactif sans accès Google Cloud |
 | `deploy.yml` | étiquette de version | images multi-architecture → ghcr.io → déploiement | 🔜 S8 |
 
 ### 8.5 Architecture de production cible (🔜 S8)
@@ -393,9 +396,11 @@ flowchart LR
 | Données réelles | pytest (marqueur `data`) | 26 tests ; S4 : `test_no_individual_data.py` (ENF-09 sur tout `site/public`), données Neo4j sans NaN | ✅ |
 | Reproductibilité | `make reproductibilite` | Deux exécutions forcées : 26 fichiers identiques | ✅ S4 |
 | Neo4j | `make neo4j` | Chargement puis 6 requêtes d'exemple non vides | ✅ S4 (local) |
+| Module JT | pytest (`test_donnees_jt.py`) | Parts et similarités identiques aux valeurs de la maquette (5 périodes × 2 mesures) | ✅ S5 |
+| Rendu réel | Playwright (image officielle, vérification ponctuelle) | Carte affichée en 0,74 s, lien direct, historique, mode sans familles, aucune violation de CSP | ✅ S5 (manuel ; automatisé en S6) |
 | Schémas | pandera | 8 schémas (dont `liens`, `attributs_medias`, `familles`, `disposition`), appliqués après chaque étape | ✅ |
 | Lint | ruff | `check` + `format --check` | ✅ |
-| Front-end | Vitest, ESLint, Prettier, `tsc` | 20 tests : normalisation de la recherche, formulations imposées RG-20/21/22/24, contrôle du vocabulaire | ✅ |
+| Front-end | Vitest, ESLint, Prettier, `tsc` | 40 tests : + `graph.json` publié validé contre `schema.json` (Ajv), contrôle de chargement, état ↔ URL, magasin (voisins, filtres), construction du graphe de la carte (avec et sans familles), échelles | ✅ |
 | Vocabulaire | `npm run vocabulaire` | Formules interdites (RG-20, RG-25) dans `i18n/fr.ts`, `methode.md`, `donnees.md` | ✅ S3 |
 | Dockerfiles, images | hadolint, Trivy | Lint des deux Dockerfiles ; failles critiques corrigeables | ✅ S3 |
 | Bout en bout, accessibilité, performance | Playwright, axe-core, Lighthouse CI | — | 🔜 S6-S8 |
@@ -443,14 +448,14 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | [ADR-007](decisions/ADR-007-familles.md) | Familles : Leiden sur les liens affichés, `log(lift)`, résolution 0,6 → 3 familles, 94 % stables | 08/10/2026 |
 | [ADR-008](decisions/ADR-008-disposition.md) | ForceAtlas2 implémenté en numpy dans le pipeline | 08/10/2026 |
 | [J2](decisions/J2-go-no-go.md) | Jalon J2 : **go sous condition** du test H5 (proposition) | 08/10/2026 |
-| [ADR-009](decisions/ADR-009-propriete-et-exports.md) | Propriétaires ultimes et parts effectives ; corrections sourcées ; format `graph.json` 1 gelé (J3) ; exports | 08/10/2026 |
+| [ADR-009](decisions/ADR-009-propriete-et-exports.md) | Propriétaires ultimes et parts effectives ; corrections sourcées ; format `graph.json` 1 gelé (J3) ; exports ; addendum : bloc `jt` | 08/10/2026 |
+| [ADR-010](decisions/ADR-010-hebergement-cloud-run.md) | Hébergement : Google Cloud Run (`europe-west9`), aperçus par étiquettes de révision, Workload Identity Federation | 08/10/2026 |
 
 **Décisions à prendre :**
 
 | # | Sujet | Échéance |
 |---|---|---|
 | J2 | Go / go partiel / stop, après le test H5 (noms des familles) | 30 octobre |
-| ADR-010 | Plateforme de conteneurs de production (D3) | S5 |
 
 ---
 
@@ -465,22 +470,22 @@ Le pipeline écrit sur la sortie d'erreur : heure, niveau, étape, puis les chif
 | Graphe très dense : 62 % des paires reliées avec RG-05 telle qu'écrite | Risque **traité** | Carte illisible | ADR-005 option C : 27 % des paires tracées |
 | Résolution des familles fragile (0,6 stable à 94 %, 0,7 à 66 %) | Risque | Familles non affichées à la prochaine édition | `make exploration` à chaque édition ; RG-07 protège le site (ADR-007) |
 | Âge connu par classes seulement | Limite des données | Âge moyen approché (± 1 an) | Mettre en avant la part des moins de 35 ans (ADR-006) |
-| Bibliothèques front récentes (Preact 11, Sigma 4, Vite 8, TypeScript 6) | Risque | Exemples et documentation plus rares | Squelette minimal validé par build et tests ; vérifier l'API de Sigma 4 avant S5 |
+| Bibliothèques front récentes (Preact 11, Sigma 4, Vite 8, TypeScript 6) | Risque **traité en S5** | Sigma 4 change un réglage par défaut (`itemSizesReference` vaut `positions`) | API lue dans les déclarations du paquet ; rendu vérifié dans un vrai navigateur |
 | Projet initialement dans `Documents` (synchronisé avec iCloud Drive), disque plein à 98 % | Risque **résolu** le 08/10/2026 | macOS retirait les fichiers du disque ; Docker ne pouvait plus les lire (`Errno 35`) | Projet déplacé dans `~/dev/graphe-medias` ; contrôle `fichiers-locaux` conservé dans le Makefile |
 
 ---
 
 ## 14. État d'implémentation
 
-| Domaine | Fin S4 | Prochaine étape |
+| Domaine | Fin S5 | Prochaine étape |
 |---|---|---|
 | Socle Docker et outillage | ✅ pipeline, site-dev, site, hadolint, Trivy | Multi-architecture (S8) |
 | Ingestion des sources | ✅ 12 sources | — |
 | Préparation Arcom | ✅ médias, confiance, âge, politique | — |
-| Calculs du graphe | ✅ co-audience, attributs, familles, disposition, ponts | JT (S5) |
+| Calculs du graphe | ✅ co-audience, attributs, familles, disposition, ponts, module JT | — |
 | Propriété | ✅ 76 % rattachés, 100 % rattachés ou marqués | Saisies sourcées (hors code) |
 | Exports et base graphe | ✅ `graph.json` validé, téléchargements, journal, Neo4j | Chargement du site (S5) |
-| Site | ✅ images, squelette, jetons de design, polices hébergées, `i18n/fr.ts`, contrôle du vocabulaire | Carte (S5) |
+| Site | ✅ chargement validé, état ↔ URL, en-tête, bandeau, légende, pied de page, carte Sigma (familles, sélection, filtres, zoom) | Recherche, fiche complète, vue tableau (S6) |
 | CI/CD | ✅ verte : hadolint, pipeline, site, Trivy | `deploy.yml` (S8) | Exécution sur GitHub |
 
 ---

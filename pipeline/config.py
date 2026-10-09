@@ -116,6 +116,15 @@ class Layout:
 
 
 @dataclass(frozen=True)
+class Jt:
+    periodes: list
+
+    @property
+    def libelles(self) -> list[str]:
+        return [f"{debut}-{fin}" for debut, fin in self.periodes]
+
+
+@dataclass(frozen=True)
 class Params:
     edition: str
     seed: int
@@ -126,6 +135,7 @@ class Params:
     affichage: Affichage
     communautes: Communautes
     layout: Layout
+    jt: Jt
 
     def publies(self) -> dict[str, Any]:
         """Paramètres sous forme de dictionnaire, pour le journal et les exports."""
@@ -172,6 +182,7 @@ def valider_params(contenu: dict[str, Any]) -> Params:
         affichage=_section(contenu, "affichage", Affichage),
         communautes=_section(contenu, "communautes", Communautes),
         layout=_section(contenu, "layout", Layout),
+        jt=_section(contenu, "jt", Jt),
     )
     s, b, a, c = p.seuils, p.bootstrap, p.attributs, p.communautes
     regles = [
@@ -199,6 +210,17 @@ def valider_params(contenu: dict[str, Any]) -> Params:
         (0 < c.stabilite_noeud_min <= 1, "0 < communautes.stabilite_noeud_min ≤ 1"),
         (0 < c.part_noeuds_stables_min <= 1, "0 < communautes.part_noeuds_stables_min ≤ 1"),
         (p.layout.iterations >= 1, "layout.iterations ≥ 1"),
+        (
+            len(p.jt.periodes) >= 1
+            and all(
+                isinstance(x, list)
+                and len(x) == 2
+                and all(isinstance(a, int) for a in x)
+                and x[0] <= x[1]
+                for x in p.jt.periodes
+            ),
+            "jt.periodes : liste de [année de début, année de fin]",
+        ),
     ]
     echecs = [message for ok, message in regles if not ok]
     if echecs:

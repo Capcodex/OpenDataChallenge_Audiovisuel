@@ -1,0 +1,149 @@
+name: Aperçu du site
+
+# T-056 (ADR-010) : chaque pull request est déployée sur Google Cloud Run, comme une révision
+# étiquetée « pr-<numéro> » du service d'aperçu, sans trafic : elle a sa propre URL, publiée en
+# commentaire. L'étiquette est retirée à la fermeture de la pull request.
+# Authentification par Workload Identity Federation (aucune clé de compte de service stockée).
+# Configuration : docs/deploiement.md. Tant qu'elle manque, le workflow s'arrête sans erreur.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  id-token: write        # jeton OIDC pour Workload Identity Federation
+  pull-requests: write
+
+concurrency:
+  group: apercu-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PROJET: ${{ vars.GCP_PROJECT_ID }}
+  FOURNISSEUR: ${{ vars.GCP_WIF_PROVIDER }}
+  COMPTE: ${{ vars.GCP_SERVICE_ACCOUNT }}
+  REGION: europe-west9                 # Paris
+  SERVICE: graphe-medias-apercu
+  ETIQUETTE: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  deployer:
+    name: Déployer l'aperçu
+    if: >-
+      github.event.action != 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configuration présente ?
+        id: config
+        run: |
+          if [ -z "$PROJET" ] || [ -z "$FOURNISSEUR" ] || [ -z "$COMPTE" ]; then
+            echo "::notice::Aperçu non configuré (voir docs/deploiement.md) : étape ignorée."
+            echo "pret=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "pret=true" >> "$GITHUB_OUTPUT"
+            echo "image=$REGION-docker.pkg.dev/$PROJET/graphe-medias/site:$ETIQUETTE-${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.pret == 'true'
+
+      - name: Authentification Google Cloud
+        if: steps.config.outputs.pret == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.FOURNISSEUR }}
+          service_account: ${{ env.COMPTE }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: steps.config.outputs.pret == 'true'
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.config.outputs.pret == 'true'
+
+      - name: Connexion à Artifact Registry
+        if: steps.config.outputs.pret == 'true'
+        run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+
+      - name: Construire et publier l'image du site
+        if: steps.config.outputs.pret == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/site.Dockerfile
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.config.outputs.image }}
+          cache-from: type=gha,scope=site
+          cache-to: type=gha,mode=max,scope=site
+
+      - name: Déployer une révision étiquetée, sans trafic
+        id: deploiement
+        if: steps.config.outputs.pret == 'true'
+        env:
+          IMAGE: ${{ steps.config.outputs.image }}
+        run: |
+          # Le service, son accès public et l'identité du site sont créés par Terraform (infra/) ;
+          # le workflow ne fait qu'ajouter des révisions, sans trafic (droits : run.developer).
+          gcloud run deploy "$SERVICE" --image="$IMAGE" --region="$REGION" --port=8080 \
+            --tag="$ETIQUETTE" --no-traffic \
+            --service-account="graphe-medias-site@$PROJET.iam.gserviceaccount.com" \
+            --memory=256Mi --cpu=1 --min-instances=0 --max-instances=1 --quiet
+          URL=$(gcloud run services describe "$SERVICE" --region="$REGION" --format=json \
+            | jq -r --arg t "$ETIQUETTE" '.status.traffic[] | select(.tag == $t) | .url')
+          test -n "$URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Vérifier l'aperçu (réponse, en-têtes, lien direct, < 3 s)
+        if: steps.config.outputs.pret == 'true'
+        env:
+          URL: ${{ steps.deploiement.outputs.url }}
+        run: |
+          for i in 1 2 3 4 5 6; do curl -sf -o /dev/null "$URL/" && break; sleep 10; done
+          curl -sI "$URL/" | tee entetes.txt
+          grep -qi "^content-security-policy: default-src 'self'" entetes.txt
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$URL/media/le-monde")" = 200
+          duree=$(curl -s -o /dev/null -w '%{time_total}' "$URL/data/graph.json")
+          echo "graph.json servi en ${duree} s"
+          awk "BEGIN { exit !($duree < 3) }"
+
+      - name: Publier l'URL dans la pull request
+        if: steps.config.outputs.pret == 'true'
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.deploiement.outputs.url }}
+        with:
+          script: |
+            const marque = "<!-- apercu-site -->";
+            const corps = `${marque}\n**Aperçu du site :** ${process.env.URL}\n\n` +
+              `Commit ${context.payload.pull_request.head.sha.slice(0, 7)} · retiré à la fermeture de la pull request.`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const commentaires = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existant = commentaires.find((c) => c.body?.includes(marque));
+            if (existant) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existant.id, body: corps });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: corps });
+            }
+
+  retirer:
+    name: Retirer l'aperçu
+    if: >-
+      github.event.action == 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && vars.GCP_WIF_PROVIDER != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.FOURNISSEUR }}
+          service_account: ${{ env.COMPTE }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Retirer l'étiquette de la révision
+        run: |
+          gcloud run services update-traffic "$SERVICE" --region="$REGION" \
+            --remove-tags="$ETIQUETTE" --quiet || echo "Étiquette $ETIQUETTE absente"

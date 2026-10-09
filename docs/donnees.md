@@ -1,6 +1,6 @@
 # Données du projet : sources et dictionnaire
 
-*État : fin du sprint 4 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
+*État : fin du sprint 5 (8 octobre 2026). À mettre à jour à chaque nouvelle source, table ou colonne.*
 
 Ce document recense **les sources utilisées** (section 1) et **la définition de chaque donnée** manipulée par le projet : variables lues dans les sources (section 2), fichiers de configuration (section 3) et tables produites par le pipeline (sections 4 et 5). La méthode de calcul est détaillée dans [methode.md](methode.md), les licences dans [LICENSE-DATA.md](../LICENSE-DATA.md).
 
@@ -27,7 +27,7 @@ Toutes les sources sont téléchargées par l'étape `ingest` depuis une adresse
 | Source | Producteur | Licence | Usage dans le projet | Statut |
 |---|---|---|---|---|
 | [Les Français et l'information, baromètre 2026](https://www.data.gouv.fr/fr/datasets/les-francais-et-linformation-barometre/) (2e édition, terrain juin-juillet 2025) | Arcom | Licence Ouverte v2.0 | Médias suivis, confiance, âge, positionnement politique : liens et profils des publics | ✅ utilisée |
-| [Classement thématique des sujets de JT, 2000-2020](https://www.data.gouv.fr/fr/datasets/classement-thematique-des-sujets-de-journaux-televises-janvier-2000-decembre-2020/) | INA | Licence Ouverte v1.0 | Module JT : profils thématiques et similarité des chaînes | Téléchargée · traitement S5 |
+| [Classement thématique des sujets de JT, 2000-2020](https://www.data.gouv.fr/fr/datasets/classement-thematique-des-sujets-de-journaux-televises-janvier-2000-decembre-2020/) | INA | Licence Ouverte v1.0 | Module JT : profils thématiques et similarité des chaînes | ✅ utilisée |
 | [Temps de parole des femmes et des hommes (déclarations CSA)](https://www.data.gouv.fr/fr/datasets/temps-de-parole-des-femmes-et-des-hommes-dans-les-programmes-ayant-fait-lobjet-dune-declaration-au-csa-pour-son-rapport-portant-sur-la-representation-des-femmes-a-la-television-et-la-radio/) | INA / CSA | Licence Ouverte v1.0 | Éditeur et groupe des chaînes et radios (complément de la propriété) | Téléchargée · traitement S4 |
 | [Médias français : qui possède quoi](https://github.com/mdiplo/Medias_francais), commit `231814e` du 17/12/2024 | Le Monde diplomatique, Acrimed | ODC-By v1.0 (attribution obligatoire) | Propriétaires et groupes des médias ([ADR-003](decisions/ADR-003-source-proprietes.md), [ADR-009](decisions/ADR-009-propriete-et-exports.md)) | ✅ utilisée |
 
@@ -74,9 +74,9 @@ Seules les variables ci-dessous sont lues. Les autres colonnes du fichier sont i
 
 La correspondance **code de modalité → média** est dans [`config/variables_arcom.yaml`](../config/variables_arcom.yaml). Pour chaque code, le pipeline vérifie que le libellé du dictionnaire correspond au média attendu.
 
-### 2.2 JT de l'INA (`ina_jt_2000_2020`, à traiter au sprint 5)
+### 2.2 JT de l'INA (`ina_jt_2000_2020`)
 
-Fichier sans en-tête. Noms de colonnes retenus lors de l'analyse exploratoire :
+Fichier sans en-tête. Noms de colonnes retenus lors de l'analyse exploratoire (et contrôlés par `prepare/jt.py` : 5 chaînes, 14 rubriques, 3e colonne vide, pas de doublon jour × chaîne × rubrique) :
 
 | Position | Nom | Type | Définition |
 |---|---|---|---|
@@ -156,7 +156,7 @@ Une ligne par média à traiter hors du rapprochement automatique ([ADR-009](dec
 
 ### 3.4 Paramètres : `config/params.yaml`
 
-Liste et valeurs dans [methode.md § 9](methode.md#9-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
+Liste et valeurs dans [methode.md § 10](methode.md#10-paramètres-édition-2026). Une clé absente, inconnue, mal typée ou hors plage fait échouer le pipeline.
 
 ---
 
@@ -334,11 +334,39 @@ Une ligne par (média, propriétaire ultime) ; une ligne sans propriétaire pour
 
 ---
 
+### 5.12 `jt_profils.parquet` · étape `jt`
+
+Une ligne par chaîne × année × rubrique (5 × 21 × 14 = 1 470 lignes ; 0 si aucun sujet). La table `data/interim/jt_quotidien.parquet` garde les séries journalières (`date`, `chaine`, `rubrique`, `n_sujets`, `duree_s`) pour la synchronisation.
+
+| Colonne | Type | Définition |
+|---|---|---|
+| `chaine` | str | TF1, France 2, France 3, Arte, M6 |
+| `annee` | int64 | 2000 à 2020 |
+| `rubrique` | str | Une des 14 rubriques de l'INA |
+| `n_sujets` | int64 | Nombre de sujets de la rubrique dans les JT de la chaîne cette année-là |
+| `duree_s` | int64 | Durée cumulée de ces sujets, en secondes |
+| `part_sujets` | float64, 0 à 1 | Part de la rubrique dans les sujets de la chaîne cette année-là |
+| `part_duree` | float64, 0 à 1 | Part de la rubrique dans la durée des sujets |
+
+### 5.13 `jt_similarites.parquet` · étape `jt_similarites`
+
+Une ligne par paire de chaînes × période × mesure (10 × 5 × 2 = 100 lignes).
+
+| Colonne | Type | Définition |
+|---|---|---|
+| `chaine_a`, `chaine_b` | str | Paire de chaînes (ordre de la liste des chaînes) |
+| `periode` | str | `AAAA-AAAA` (params `jt.periodes`) |
+| `mesure` | str | `sujets` ou `duree` |
+| `similarite_js` | float64, 0 à 1 | 1 − distance de Jensen-Shannon (base 2) entre les répartitions des 14 rubriques |
+| `synchronisation` | float64, -1 à 1 | Corrélation de Pearson des volumes journaliers par rubrique, moyennée sur les rubriques |
+
+---
+
 ## 6. Données publiées (`site/public/`, versionnées)
 
 ### 6.1 `data/graph.json` · étape `export_site`
 
-Données de la carte, au format décrit et validé par [`site/src/graph/schema.json`](../site/src/graph/schema.json) (format 1, gelé au jalon J3, [ADR-009](decisions/ADR-009-propriete-et-exports.md)). JSON compact, réels arrondis à 3 décimales, 155 ko en 2026.
+Données de la carte, au format décrit et validé par [`site/src/graph/schema.json`](../site/src/graph/schema.json) (format 1, gelé au jalon J3, [ADR-009](decisions/ADR-009-propriete-et-exports.md)). JSON compact, réels arrondis à 3 décimales, 181 ko en 2026.
 
 | Clé | Contenu |
 |---|---|
@@ -348,7 +376,7 @@ Données de la carte, au format décrit et validé par [`site/src/graph/schema.j
 | `edges[]` | Liens retenus : `s`, `t`, `lift`, `ci` [bas, haut], `n` (répondants communs), `shown` (tracé sur la carte) |
 | `communities[]` | `id`, `label` (provisoire), `color`, `size` |
 | `owners[]` | `id`, `name`, `type`, `source`, `as_of` |
-| `jt` | `null` jusqu'au sprint 5 |
+| `jt` | `channels`, `rubrics`, `years`, `periods`, `profiles[mesure][chaîne][année][rubrique]` (parts), `similarity[]` (`a`, `b`, `period`, `measure`, `js`, `sync`) |
 
 ### 6.2 `telechargements/` · étapes `telechargements` et `journal`
 
@@ -370,7 +398,5 @@ CSV en UTF-8, séparateur virgule, point décimal, réels à 6 chiffres signific
 | Table | Sprint | Colonnes prévues (CdCT § 8.1) |
 |---|---|---|
 | Noms des familles | après le test H5 | `communities[].label` dans `graph.json` |
-| `jt_profiles` | S5 | `channel`, `year`, `rubric`, `n_subjects`, `duration_s`, `share_subjects`, `share_duration` |
-| `jt_similarity` | S5 | `channel_a`, `channel_b`, `period`, `js_similarity`, `sync_corr` |
 
 Les noms définitifs suivront la convention française du dépôt (comme `liens` et `attributs_medias`), et cette section sera alors déplacée dans la section 5.
