@@ -4,7 +4,7 @@ Graphe de proximité des médias français : quels médias partagent le même pu
 
 Le projet s'appuie sur des données publiques : le baromètre de l'Arcom « Les Français et l'information » (2026), les données de l'INA sur les journaux télévisés et la base « Médias français » du Monde diplomatique et d'Acrimed.
 
-> **État :** sprint 4 terminé (propriété, export `graph.json`, données téléchargeables, Neo4j, reproductibilité). Le site n'est encore qu'un squelette : la carte arrive au sprint 5.
+> **État :** sprint 5 terminé (module JT, carte interactive Sigma.js, aperçus Google Cloud Run prêts). Recherche, fiche complète et vue tableau au sprint 6.
 
 ## Prérequis
 
@@ -30,7 +30,7 @@ Sans `make` : `docker compose run --rm pipeline [commande]`.
 | `python -m pipeline run --force` | Réexécute tout |
 | `python -m pipeline check` | Valide les sorties existantes (schémas) |
 
-Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `proprietes` → `coaudience` → `attributs` → `familles` → `disposition` → `export_site` → `telechargements` → `journal`.
+Étapes actuelles : `ingest` → `prepare_arcom` → `referentiel` → `proprietes` → `coaudience` → `attributs` → `familles` → `disposition` → `jt` → `jt_similarites` → `export_site` → `telechargements` → `journal`.
 
 | Commande `make` | Effet |
 |---|---|
@@ -53,6 +53,7 @@ docs/            walkthrough.md (visite guidée), DAT.md (architecture), methode
                  decisions/ (ADR), sprints/ (bilans), exploration/ (analyses hors produit)
 data/            données téléchargées et calculées — non versionné
 site/            site web : Vite + TypeScript + Preact (squelette), public/ (données agrégées pour le site)
+infra/           infrastructure Google Cloud en Terraform (docs/deploiement.md)
 ```
 
 ### Données produites
@@ -74,6 +75,7 @@ site/            site web : Vite + TypeScript + Preact (squelette), public/ (don
 | `data/output/journal_familles.json` | Réglages, stabilité, familles affichées ou non (RG-07) | Agrégé |
 | `data/output/proprietes.parquet` | Groupe et propriétaires ultimes de chaque média | Agrégé |
 | `data/output/run_log.json` | Journal complet de l'exécution | Agrégé |
+| `data/output/jt_profils.parquet`, `jt_similarites.parquet` | Module JT : parts des rubriques, proximité des chaînes | Agrégé |
 | `site/public/data/graph.json` | Données de la carte (format validé par `site/src/graph/schema.json`) | **Publié, versionné** |
 | `site/public/telechargements/` | CSV, Parquet, GEXF, dictionnaire des colonnes, journal | **Publié, versionné** |
 
@@ -92,6 +94,10 @@ docker run --rm -v "$PWD":/app -w /app -e UV_PYTHON_DOWNLOADS=never \
   ghcr.io/astral-sh/uv:0.8-python3.12-bookworm-slim uv lock
 make build
 ```
+
+## Déployer
+
+Aperçu automatique de chaque pull request sur Google Cloud Run : voir [docs/deploiement.md](docs/deploiement.md) (accès à créer une fois).
 
 ## Modifier les dépendances du site
 

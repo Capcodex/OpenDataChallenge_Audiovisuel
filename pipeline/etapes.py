@@ -16,8 +16,9 @@ import pandera.pandas as pa
 from pipeline import ingest, schemas
 from pipeline.chemins import Chemins
 from pipeline.compute import attributs, coaudience, disposition, familles
+from pipeline.compute import jt as jt_similarites
 from pipeline.export import journal, site_json, telechargements
-from pipeline.prepare import arcom, proprietes, referentiel
+from pipeline.prepare import arcom, jt, proprietes, referentiel
 
 
 @dataclass(frozen=True)
@@ -89,6 +90,18 @@ ETAPES: list[Etape] = [
         "Disposition de la carte (ForceAtlas2, graine fixe)",
         disposition,
         {"output/disposition.parquet": schemas.DISPOSITION},
+    ),
+    Etape(
+        "jt",
+        "Profils thématiques des JT du soir 2000-2020 (INA)",
+        jt,
+        {"output/jt_profils.parquet": schemas.JT_PROFILS},
+    ),
+    Etape(
+        "jt_similarites",
+        "Similarité et synchronisation des JT (Jensen-Shannon, Pearson)",
+        jt_similarites,
+        {"output/jt_similarites.parquet": schemas.JT_SIMILARITES},
     ),
     Etape("export_site", "Export graph.json pour le site (validé par son schéma)", site_json),
     Etape(

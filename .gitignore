@@ -20,3 +20,10 @@ site/dist/
 
 # Système
 .DS_Store
+
+# Terraform (infra/) : état local et fichiers du fournisseur, jamais versionnés (l'état contient
+# des identifiants de ressources). Le verrou des versions (.terraform.lock.hcl) est versionné.
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars

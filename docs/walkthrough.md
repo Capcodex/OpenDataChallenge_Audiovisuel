@@ -1,6 +1,6 @@
 # Walkthrough : ce qui a été construit jusqu'ici
 
-Ce document fait visiter le projet tel qu'il est à la fin du **sprint 4** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
+Ce document fait visiter le projet tel qu'il est à la fin du **sprint 5** (8 octobre 2026) : d'où viennent les données, ce que fait le code, comment le lancer et le vérifier, et comment le faire évoluer.
 
 Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour les bilans chiffrés, voir [sprints/](sprints/). Pour la méthode de calcul, voir [methode.md](methode.md).
 
@@ -20,6 +20,7 @@ Pour l'architecture cible et les choix techniques, voir le [DAT](DAT.md). Pour l
 | **Sprint 2** | Liens de co-audience, profils des publics, image du site | `graphe-medias/` |
 | **Sprint 3** | Familles, disposition de la carte, jetons de design, textes de l'interface | `graphe-medias/` |
 | **Sprint 4** | Propriété, `graph.json`, téléchargements, Neo4j, reproductibilité | `graphe-medias/` |
+| **Sprint 5** | Module JT, carte interactive, aperçus Google Cloud Run | `graphe-medias/` |
 
 > Les documents de conception, d'abord dans `~/Documents/Data Viz/`, sont désormais dans `~/dev/Implementation/`, à côté du dépôt. `produits_data.md` ne se trouve dans aucun des deux dossiers.
 
@@ -35,7 +36,7 @@ Prérequis : Docker avec Docker Compose v2. Rien d'autre.
 cd ~/dev/graphe-medias
 make build      # construit l'image du pipeline (≈ 1 min la première fois)
 make pipeline   # télécharge les sources, les vérifie, prépare les données (≈ 12 s)
-make test       # 94 tests (+ 20 tests du site : make test-site)
+make test       # 118 tests (+ 40 tests du site : make test-site)
 ```
 
 Sortie attendue de `make pipeline` (première exécution) :
@@ -84,6 +85,7 @@ config/params.yaml ──────────┴──► [referentiel] ─�
                                   [familles] ◄── liens affichés ──► data/output/familles.parquet
                                   [disposition] ◄─ liens affichés ─► data/output/disposition.parquet
 base Médias français + corrections ──► [proprietes] ──► data/output/proprietes.parquet
+CSV INA (JT 2000-2020) ──► [jt] ──► jt_profils.parquet ──► [jt_similarites] ──► jt_similarites.parquet
 toutes les sorties agrégées ──► [export_site] ──► site/public/data/graph.json (validé par son schéma)
                             ──► [telechargements] ──► site/public/telechargements/ (CSV, Parquet, GEXF…)
                             ──► [journal] ──► data/output/run_log.json
@@ -202,7 +204,28 @@ Tous les indicateurs sont des moyennes pondérées sur une partie du public d'un
 - `make neo4j` charge la base graphe d'analyse et vérifie les requêtes de [`docs/requetes.cypher`](requetes.cypher).
 - `make reproductibilite` lance deux fois le pipeline et compare les empreintes de tous les fichiers produits.
 
-### 3.8 Le site : deux images
+### 3.8 Le module JT
+
+**Fichiers :** [`pipeline/prepare/jt.py`](../pipeline/prepare/jt.py), [`pipeline/compute/jt.py`](../pipeline/compute/jt.py)
+
+Le fichier de l'INA est lu et contrôlé (chaînes, rubriques, doublons), puis agrégé par chaîne, année et rubrique. Les similarités (1 − distance de Jensen-Shannon) et la synchronisation des agendas sont calculées pour 5 périodes. [`tests/data/test_donnees_jt.py`](../tests/data/test_donnees_jt.py) vérifie un **écart nul** avec les valeurs de la maquette du module JT ([`tests/fixtures/jt_reference.json`](../tests/fixtures/jt_reference.json)).
+
+### 3.9 Le site : la carte
+
+**Fichiers :** [`site/src/`](../site/src/)
+
+| Module | Rôle |
+|---|---|
+| `graph/charger.ts`, `graph/types.ts` | Chargement de `/data/graph.json`, contrôle de cohérence ; types du format 1 |
+| `etat/magasin.ts`, `etat/url.ts` | État en signaux Preact (sélection, filtres, survol) ; synchronisation avec l'URL `/media/<id>?type=…&famille=…` et l'historique |
+| `composants/carte-donnees.ts`, `Carte.tsx` | Graphe graphology (positions du pipeline, taille selon le public, couleurs des familles ou gris, RG-07) ; Sigma.js, réducteurs pour la sélection et les filtres, zoom |
+| `composants/EnTete.tsx`, `Bandeau.tsx`, `Legende.tsx`, `PiedDePage.tsx`, `Panneau.tsx` | Composants communs (maquettes) ; aperçu de la fiche (complète au sprint 6) |
+
+**Piège Sigma 4 :** par défaut, les tailles sont dans les unités du graphe (`itemSizesReference: "positions"`). Avec des coordonnées dans [0, 1], les points couvraient toute la carte. Le réglage est remis à `"screen"`.
+
+nginx sert `index.html` pour `/media/<id>` tant que les pages pré-générées n'existent pas (sprint 6) : un lien vers une fiche fonctionne déjà.
+
+### 3.10 Le site : deux images
 
 **Fichiers :** [`docker/site.Dockerfile`](../docker/site.Dockerfile), [`docker/nginx.conf`](../docker/nginx.conf), [`site/`](../site/)
 
@@ -309,4 +332,4 @@ Les tests sur les données sont ignorés tant que le pipeline n'a pas tourné (`
 
 **Jalon J2** : la proposition est « go », sous condition du test H5 : faire nommer les 3 familles par 3 à 5 personnes extérieures ([J2-go-no-go.md](decisions/J2-go-no-go.md)).
 
-**Sprint 5 (9-13 novembre)** : module JT (profils thématiques, similarités), chargement de `graph.json` dans le site, première carte Sigma.js. Détail dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).
+**Sprint 6 (16-20 novembre)** : recherche (Fuse.js), fiche complète (profil du public, propriété, marges), vue tableau, pages pré-générées par média, tests de bout en bout (Playwright, axe-core). Détail dans le backlog d'implémentation (`~/dev/Implementation/backlog_implementation_graphe_medias.md`).

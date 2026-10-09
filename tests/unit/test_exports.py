@@ -58,7 +58,23 @@ GRAPHE = {
     "edges": [],
     "communities": [],
     "owners": [],
-    "jt": None,
+    "jt": {
+        "channels": ["TF1", "Arte"],
+        "rubrics": ["Sport", "Société"],
+        "years": [2000],
+        "periods": ["2000-2000"],
+        "profiles": {"sujets": [[[0.4, 0.6]], [[0.1, 0.9]]], "duree": [[[0.5, 0.5]], [[0.2, 0.8]]]},
+        "similarity": [
+            {
+                "a": "TF1",
+                "b": "Arte",
+                "period": "2000-2000",
+                "measure": "sujets",
+                "js": 0.7,
+                "sync": 0.3,
+            }
+        ],
+    },
 }
 
 
@@ -76,6 +92,8 @@ def test_graphe_conforme_accepte():
         lambda g: g["edges"].append(
             {"s": "a", "t": "b", "lift": 0.9, "ci": [0.8, 1], "n": 40, "shown": True}
         ),  # lien sous 1
+        lambda g: g.update(jt=None),  # bloc JT obligatoire depuis le sprint 5
+        lambda g: g["jt"]["similarity"][0].update(js=1.2),  # similarité hors [0, 1]
     ],
 )
 def test_graphe_non_conforme_refuse(modifier):

@@ -377,8 +377,109 @@
       }
     },
     "jt": {
-      "type": "null",
-      "description": "Module JT : sprint 5"
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Module JT 2000-2020 (INA) : profils thématiques et proximité des chaînes",
+      "required": ["channels", "rubrics", "years", "periods", "profiles", "similarity"],
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        },
+        "rubrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        },
+        "years": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "periods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{4}$"
+          },
+          "minItems": 1
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sujets", "duree"],
+          "description": "profiles[mesure][chaîne][année][rubrique] = part de la rubrique (0-1), dans l'ordre de channels, years, rubrics",
+          "properties": {
+            "sujets": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            "duree": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "similarity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["a", "b", "period", "measure", "js", "sync"],
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              },
+              "period": {
+                "type": "string"
+              },
+              "measure": {
+                "enum": ["sujets", "duree"]
+              },
+              "js": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "sync": {
+                "type": ["number", "null"],
+                "minimum": -1,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

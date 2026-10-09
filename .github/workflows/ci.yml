@@ -138,4 +138,8 @@ jobs:
           grep -qi "^content-security-policy: default-src 'self'" entetes.txt
           grep -qi "^x-content-type-options: nosniff" entetes.txt
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/absente)" = 404
+          # Lien direct vers une fiche : l'application est servie (régression S5 : 404).
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/media/le-monde)" = 200
+          curl -s http://localhost:8080/media/le-monde/ | grep -q '<div id="app">'
+          curl -s http://localhost:8080/data/graph.json | grep -q '"format":1'
           docker compose down

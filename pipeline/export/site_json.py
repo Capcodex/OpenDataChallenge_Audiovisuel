@@ -68,6 +68,39 @@ def triplet(
     return [arrondi(v, chiffres) for v in valeurs]
 
 
+def bloc_jt(profils: pd.DataFrame, similarites: pd.DataFrame, periodes: list[str]) -> dict:
+    """Bloc `jt` : parts annuelles par chaîne et rubrique, similarités par période."""
+    chaines = list(dict.fromkeys(profils["chaine"]))
+    annees = sorted(profils["annee"].unique())
+    rubriques = sorted(profils["rubrique"].unique())
+    indexe = profils.set_index(["chaine", "annee", "rubrique"])
+
+    def parts(colonne: str) -> list:
+        return [
+            [[arrondi(indexe.loc[(c, a, r), colonne]) for r in rubriques] for a in annees]
+            for c in chaines
+        ]
+
+    return {
+        "channels": chaines,
+        "rubrics": rubriques,
+        "years": [int(a) for a in annees],
+        "periods": periodes,
+        "profiles": {"sujets": parts("part_sujets"), "duree": parts("part_duree")},
+        "similarity": [
+            {
+                "a": r.chaine_a,
+                "b": r.chaine_b,
+                "period": r.periode,
+                "measure": r.mesure,
+                "js": arrondi(r.similarite_js),
+                "sync": arrondi(r.synchronisation),
+            }
+            for r in similarites.itertuples()
+        ],
+    }
+
+
 def construire(
     medias: pd.DataFrame,
     attributs: pd.DataFrame,
@@ -78,6 +111,7 @@ def construire(
     journal_familles: dict,
     journal_coaudience: dict,
     params: Params,
+    jt: dict,
 ) -> dict:
     m = medias.set_index("media_id")
     a = attributs.set_index("media_id")
@@ -189,7 +223,7 @@ def construire(
         "edges": edges,
         "communities": communities,
         "owners": owners,
-        "jt": None,
+        "jt": jt,
     }
 
 
@@ -222,6 +256,7 @@ def executer(chemins: Chemins) -> None:
         json.loads((chemins.output / "journal_familles.json").read_text(encoding="utf-8")),
         json.loads((chemins.output / "journal_coaudience.json").read_text(encoding="utf-8")),
         params,
+        bloc_jt(lire("jt_profils.parquet"), lire("jt_similarites.parquet"), params.jt.libelles),
     )
     texte = serialiser(graphe)
     valider(graphe, json.loads(chemins.schema_graphe.read_text(encoding="utf-8")), texte)
@@ -252,6 +287,8 @@ def entrees(chemins: Chemins) -> list[Path]:
         o / "proprietes.parquet",
         o / "journal_familles.json",
         o / "journal_coaudience.json",
+        o / "jt_profils.parquet",
+        o / "jt_similarites.parquet",
     ]
 
 

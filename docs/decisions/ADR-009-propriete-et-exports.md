@@ -47,9 +47,13 @@ Le format suit le CdC technique § 8.2, avec les clés courtes en anglais du con
 | `others` | ajouté | Médias sous le seuil (RG-02) : nom seulement, pour la recherche |
 | `edges` | tous les liens retenus, `shown` = tracé sur la carte | La fiche peut citer des voisins hors de la carte |
 | `communities[].label` | « Famille 1 » à « Famille 3 », provisoires | Noms issus du test H5 (jalon J2) |
-| `jt` | `null` | Module JT : sprint 5 |
+| `jt` | bloc du module JT (sprint 5, voir l'addendum) | Réservé dès le gel J3 |
 
 En 2026, le fichier pèse **155 ko**, 29 ko compressé (budget : 2 Mo).
+
+### Addendum du sprint 5 : bloc `jt`
+
+Le bloc `jt`, réservé (`null`) au jalon J3, est complété sans changer `meta.format`, car le site ne le lisait pas encore. Contenu : `channels`, `rubrics`, `years`, `periods`, `profiles[mesure][chaîne][année][rubrique]` (parts de 0 à 1, mesures `sujets` et `duree`), et `similarity[]` (`a`, `b`, `period`, `measure`, `js`, `sync`). Le fichier passe de 155 à 181 ko.
 
 ### Conséquences
 
