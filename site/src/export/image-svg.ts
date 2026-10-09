@@ -14,6 +14,7 @@ import {
 } from "../composants/carte-donnees";
 import { formaterDate } from "../fiche/fiche-donnees";
 import type { Graphe, Noeud } from "../graph/types";
+import { libellePosition } from "../familles/position";
 import { cartoucheExport, fr } from "../i18n/fr";
 
 export interface OptionsExport {
@@ -25,6 +26,16 @@ export interface OptionsExport {
   misEnAvant?: ReadonlySet<string> | null;
   /** Titre en haut de l'image (calque : « Médias détenus par … »). */
   titre?: string;
+  /**
+   * Coloration de la vue Propriétaires (V2) : couleur de chaque média et légende du cartouche.
+   * Absente : couleurs et légende des familles.
+   */
+  coloration?: { couleurs: ReadonlyMap<string, string>; legende: EntreeCartouche[] } | null;
+}
+
+export interface EntreeCartouche {
+  libelle: string;
+  couleur: string;
 }
 
 export const TAILLES = [
@@ -42,7 +53,15 @@ const r1 = (x: number) => Math.round(x * 10) / 10;
 
 /** Image SVG de la carte et de son cartouche. `visibles` : médias passant les filtres en cours. */
 export function imageSvg(g: Graphe, visibles: Noeud[], options: OptionsExport): string {
-  const { largeur: L, hauteur: H, noms, liens, misEnAvant = null, titre } = options;
+  const {
+    largeur: L,
+    hauteur: H,
+    noms,
+    liens,
+    misEnAvant = null,
+    titre,
+    coloration = null,
+  } = options;
   const enAvant = (id: string) => !misEnAvant || misEnAvant.has(id);
   const e = L / 1600; // échelle des tailles de points, traits et textes
   const marge = 40 * e;
@@ -70,9 +89,11 @@ export function imageSvg(g: Graphe, visibles: Noeud[], options: OptionsExport): 
   const couleur = (n: Noeud) =>
     !enAvant(n.id)
       ? COULEUR_ESTOMPEE
-      : g.meta.communities_displayed
-        ? (couleurs.get(n.community) ?? COULEUR_SANS_FAMILLE)
-        : COULEUR_SANS_FAMILLE;
+      : coloration
+        ? (coloration.couleurs.get(n.id) ?? COULEUR_SANS_FAMILLE)
+        : g.meta.communities_displayed
+          ? (couleurs.get(n.community) ?? COULEUR_SANS_FAMILLE)
+          : COULEUR_SANS_FAMILLE;
   const partMax = Math.max(...g.nodes.map((n) => n.share));
 
   const traits = liens
@@ -108,11 +129,32 @@ export function imageSvg(g: Graphe, visibles: Noeud[], options: OptionsExport): 
 
   // Cartouche (RG-23) : légende, phrase de lecture, source, date, adresse.
   const yC = H - hCartouche;
-  const legende = g.meta.communities_displayed
-    ? g.communities
-        .map((c, i) => {
-          const x = marge + i * 170 * e;
-          return `<circle cx="${r1(x + 6 * e)}" cy="${r1(yC + 34 * e)}" r="${r1(6 * e)}" fill="${c.color}"/><text x="${r1(x + 18 * e)}" y="${r1(yC + 39 * e)}">${xml(c.label)}</text>`;
+  const entrees: EntreeCartouche[] | null = coloration
+    ? coloration.legende
+    : g.meta.communities_displayed
+      ? g.communities.map((c) => {
+          const position = libellePosition(c, g.communities);
+          return {
+            libelle: position ? `${c.label} · ${position.toLowerCase()}` : c.label,
+            couleur: c.color,
+          };
+        })
+      : null;
+  // Entrées à la suite, sur deux lignes au plus (largeur du texte estimée : 7,5 px par caractère).
+  let x = marge;
+  let ligne = 0;
+  const legende = entrees
+    ? entrees
+        .map(({ libelle, couleur: c }) => {
+          const largeur = (30 + libelle.length * 7.5) * e;
+          if (x + largeur > L - marge && x > marge && ligne === 0) {
+            x = marge;
+            ligne = 1;
+          }
+          const y = yC + (24 + ligne * 22) * e;
+          const svg = `<circle cx="${r1(x + 6 * e)}" cy="${r1(y)}" r="${r1(6 * e)}" fill="${c}"/><text x="${r1(x + 18 * e)}" y="${r1(y + 5 * e)}">${xml(libelle)}</text>`;
+          x += largeur;
+          return svg;
         })
         .join("")
     : `<text x="${r1(marge)}" y="${r1(yC + 39 * e)}">${xml(fr.legende.sansFamilles)}</text>`;

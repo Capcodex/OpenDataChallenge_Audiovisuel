@@ -33,12 +33,13 @@ for entete in \
   fi
 done
 
-for page in / /methode /tableau /proprietaires /media/le-monde /media/le-monde/ \
+for page in / /methode /tableau /media/le-monde /media/le-monde/ \
   /data/graph.json /telechargements/liens.csv /telechargements/dictionnaire.md; do
   if [ "$(code "$page")" = 200 ]; then ok "200 $page"; else ko "$page ne répond pas 200"; fi
 done
 if [ "$(code /page-absente)" = 404 ]; then ok "404 pour une page absente"; else ko "pas de 404"; fi
 if [ "$(code /jt)" = 301 ]; then ok "301 /jt (page retirée en V2)"; else ko "/jt n'est pas redirigée"; fi
+if [ "$(code /proprietaires)" = 301 ]; then ok "301 /proprietaires (vue de la carte en V2)"; else ko "/proprietaires n'est pas redirigée"; fi
 
 # Aperçu d'un lien partagé (E2-04) et lien permanent vers cette adresse (EF-M7-01).
 fiche=$(curl -s "$URL/media/le-monde/")

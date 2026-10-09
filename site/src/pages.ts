@@ -3,11 +3,10 @@
  * pré-généré au build (scripts/pages-statiques.ts) : titre, description et balises Open Graph
  * propres, sans redirection d'application monopage.
  */
-export type Page = "carte" | "proprietaires" | "methode" | "tableau";
+export type Page = "carte" | "methode" | "tableau";
 
 export const CHEMINS: Record<Page, string> = {
   carte: "/",
-  proprietaires: "/proprietaires",
   methode: "/methode",
   tableau: "/tableau",
 };

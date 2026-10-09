@@ -55,6 +55,10 @@ En 2026, le fichier pèse **155 ko**, 29 ko compressé (budget : 2 Mo).
 
 Le bloc `jt`, réservé (`null`) au jalon J3, est complété sans changer `meta.format`, car le site ne le lisait pas encore. Contenu : `channels`, `rubrics`, `years`, `periods`, `profiles[mesure][chaîne][année][rubrique]` (parts de 0 à 1, mesures `sujets` et `duree`), et `similarity[]` (`a`, `b`, `period`, `measure`, `js`, `sync`). Le fichier passe de 155 à 181 ko.
 
+### Addendum V2 : format 2
+
+`meta.format` passe à **2** ([ADR-011](ADR-011-positionnement-relatif-des-familles.md)) : chaque élément de `communities[]` reçoit `pol` ([valeur, borne basse, borne haute] du positionnement moyen du public de la famille), `pol_n` (répondants ayant donné une note) et `position` (`"gauche"`, `"centre"`, `"droite"` ou `null`, libellé relatif). Le site refuse un autre format au chargement ; données et site sont publiés dans la même image.
+
 ### Conséquences
 
 - Tout changement du format après J3 passe par un nouvel ADR et une incrémentation de `meta.format`.

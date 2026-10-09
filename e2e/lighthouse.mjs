@@ -28,7 +28,7 @@ const BUDGET_CARTE = { performance: 75, accessibility: 95 };
 const PAGES = [
   ["/", BUDGET_CARTE],
   ["/media/france-inter", BUDGET_CARTE],
-  ["/proprietaires", BUDGET_CARTE],
+  ["/?proprietaire=rodolphe-saade", BUDGET_CARTE],
   ["/methode", BUDGET],
   ["/tableau", BUDGET],
 ];
@@ -79,7 +79,7 @@ try {
     echecs += enEchec.length;
     const lcp = lhr.audits["largest-contentful-paint"]?.displayValue ?? "?";
     console.log(
-      `${enEchec.length ? "✗" : "✓"} ${page.padEnd(22)} performance ${notes.performance}, ` +
+      `${enEchec.length ? "✗" : "✓"} ${page.padEnd(32)} performance ${notes.performance}, ` +
         `accessibilité ${notes.accessibility} · LCP ${lcp}`,
     );
     for (const [categorie] of enEchec) {

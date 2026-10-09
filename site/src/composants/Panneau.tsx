@@ -7,10 +7,19 @@
  */
 import { useEffect, useRef } from "preact/hooks";
 
-import { autresParId, fermer, noeudsParId, ouverture, selection } from "../etat/magasin";
+import {
+  autresParId,
+  fermer,
+  noeudsParId,
+  ouverture,
+  proprietaireActif,
+  selection,
+  vue,
+} from "../etat/magasin";
 import type { Graphe } from "../graph/types";
 import { fr } from "../i18n/fr";
 import { Fiche, FicheInsuffisante } from "./Fiche";
+import { ListeProprietaires, SyntheseProprietaire } from "./Proprietaires";
 import { ID_RECHERCHE } from "./Recherche";
 
 export function Panneau({ donnees }: { donnees: Graphe }) {
@@ -41,6 +50,15 @@ export function Panneau({ donnees }: { donnees: Graphe }) {
     return () => removeEventListener("keydown", surEchap);
   }, [ouvert]);
 
+  // Vue Propriétaires sans fiche ouverte : synthèse du propriétaire choisi, ou liste des propriétaires.
+  if (!ouvert && vue.value === "proprietaires" && proprietaireActif.value) {
+    return (
+      <aside class="panneau" aria-label={fr.proprietaires.synthese}>
+        <SyntheseProprietaire donnees={donnees} id={proprietaireActif.value} />
+      </aside>
+    );
+  }
+
   if (!ouvert) {
     return (
       <aside class="panneau" aria-labelledby="panneau-titre">
@@ -54,6 +72,7 @@ export function Panneau({ donnees }: { donnees: Graphe }) {
         <p class="panneau__discret">
           {fr.accueil.resume(donnees.nodes.length, donnees.edges.filter((e) => e.shown).length)}
         </p>
+        {vue.value === "proprietaires" && <ListeProprietaires donnees={donnees} />}
       </aside>
     );
   }

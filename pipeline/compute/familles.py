@@ -14,6 +14,9 @@
 5. Ponts : intermédiarité pondérée (distance = 1 / lift) et coefficient de participation aux
    familles ; les `ponts_nombre` premiers par participation sont marqués `pont`.
 
+Positionnement du public de chaque famille et libellé relatif (V2, ADR-011) :
+compute/publics_familles.py, publié dans journal_familles.json (« publics »).
+
 Sorties : data/output/familles.parquet, data/output/journal_familles.json.
 """
 
@@ -29,7 +32,7 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment
 
 from pipeline.chemins import Chemins
-from pipeline.compute import bootstrap
+from pipeline.compute import bootstrap, publics_familles
 from pipeline.compute.coaudience import matrice_lift
 from pipeline.config import Params, charger_params
 
@@ -224,13 +227,10 @@ def executer(chemins: Chemins) -> None:
     )
     medias = sorted(medias_ref.loc[medias_ref["affichable"], "media_id"])
 
-    sortie, journal = calculer(
-        table[medias].to_numpy(dtype=np.float64),
-        table["poids"].to_numpy(dtype=np.float64),
-        medias,
-        liens,
-        params,
-    )
+    x = table[medias].to_numpy(dtype=np.float64)
+    poids = table["poids"].to_numpy(dtype=np.float64)
+    sortie, journal = calculer(x, poids, medias, liens, params)
+    journal["publics"] = publics(x, poids, medias, sortie, journal, chemins, params)
     chemins.output.mkdir(parents=True, exist_ok=True)
     sortie.to_parquet(chemins.output / "familles.parquet", index=False)
     (chemins.output / "journal_familles.json").write_text(
@@ -253,10 +253,52 @@ def executer(chemins: Chemins) -> None:
     )
 
 
+def publics(
+    x: np.ndarray,
+    poids: np.ndarray,
+    medias: list[str],
+    sortie: pd.DataFrame,
+    journal: dict,
+    chemins: Chemins,
+    params: Params,
+) -> list[dict]:
+    """Positionnement du public de chaque famille et libellé relatif (ADR-011)."""
+    profil = pd.read_parquet(chemins.interim / "repondant_profil.parquet")
+    famille_de = sortie.set_index("media_id")["famille"]
+    familles = sorted(famille_de.unique().tolist())
+    membres = publics_familles.appartenance(x, famille_de.loc[medias].to_numpy(), familles)
+    tirages = bootstrap.poids_tires(poids, params.bootstrap.iterations, params.seed)
+    pos, tirages_familles = publics_familles.positionnement_familles(
+        membres,
+        profil["pol"].to_numpy(dtype=np.float64),
+        poids,
+        tirages,
+        params.bootstrap.quantiles,
+    )
+    libelles = publics_familles.positions_relatives(
+        pos["pol_moy"].to_numpy(),
+        tirages_familles,
+        params.bootstrap.quantiles[0],
+        affichees=journal["familles_affichees"],
+    )
+    return [
+        {
+            "famille": int(f),
+            "n_repondants": int(ligne.n_repondants),
+            "pol_n": int(ligne.pol_n),
+            "pol": [round(float(v), 4) for v in (ligne.pol_moy, ligne.pol_bas, ligne.pol_haut)],
+            "position": libelle,
+        }
+        for f, ligne, libelle in zip(familles, pos.itertuples(), libelles, strict=True)
+    ]
+
+
 def entrees(chemins: Chemins) -> list[Path]:
     return [
         chemins.config / "params.yaml",
         chemins.interim / "repondant_media.parquet",
+        chemins.interim / "repondant_profil.parquet",
+        Path(publics_familles.__file__),
         chemins.output / "medias.parquet",
         chemins.output / "liens.parquet",
         Path(bootstrap.__file__),

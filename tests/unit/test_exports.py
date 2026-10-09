@@ -43,7 +43,7 @@ NOEUD = {
 }
 GRAPHE = {
     "meta": {
-        "format": 1,
+        "format": 2,
         "edition": "2026",
         "date_traitement": "2026-10-08",
         "version_pipeline": "0.1.0",

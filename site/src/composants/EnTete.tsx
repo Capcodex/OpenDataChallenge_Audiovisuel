@@ -6,7 +6,6 @@ import { Recherche } from "./Recherche";
 // Navigation principale : l'onglet « Données » mène à la vue tableau et aux téléchargements.
 const PAGES: { cle: keyof typeof fr.navigation; page: Page }[] = [
   { cle: "carte", page: "carte" },
-  { cle: "proprietaires", page: "proprietaires" },
   { cle: "methode", page: "methode" },
   { cle: "donnees", page: "tableau" },
 ];

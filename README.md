@@ -4,9 +4,9 @@ Graphe de proximité des médias français : quels médias partagent le même pu
 
 Le projet s'appuie sur des données publiques : le baromètre de l'Arcom « Les Français et l'information » (2026), les données de l'INA sur les journaux télévisés et la base « Médias français » du Monde diplomatique et d'Acrimed.
 
-**Site :** https://graphe-medias-718967467429.europe-west9.run.app · carte des publics, fiche de chaque média, propriétaires, méthode et données téléchargeables.
+**Site :** https://graphe-medias-718967467429.europe-west9.run.app · carte des publics, colorée par propriétaire ou par famille de médias, fiche de chaque média, méthode et données téléchargeables.
 
-> **État :** V1 (sprint 8) : recette et mise en production. Bilans de chaque sprint dans [docs/sprints/](docs/sprints/).
+> **État :** V2 (2.0.0) : carte unique avec vues Propriétaires et Familles, positionnement relatif du public des familles, page JT retirée. Bilans dans [docs/sprints/](docs/sprints/), recette dans [docs/recette.md](docs/recette.md).
 
 ## Prérequis
 

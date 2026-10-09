@@ -16,6 +16,7 @@ import {
   propriete,
   seuils,
 } from "../fiche/fiche-donnees";
+import { libellePosition } from "../familles/position";
 import type { Graphe, Noeud } from "../graph/types";
 import { fr, phraseLien, phrasePositionnement } from "../i18n/fr";
 import { CopierMention } from "./CopierMention";
@@ -149,6 +150,11 @@ export function Fiche({
           </div>
           <p>{phrasePositionnement(polMoy, polBas, polHaut)}</p>
           {m.pol_nr > 0 && <p class="panneau__discret">{fr.fiche.nonReponses(m.pol_nr)}</p>}
+          {famille && libellePosition(famille, g.communities) && (
+            <p class="panneau__discret">
+              {fr.familles.dansFiche(famille.label, libellePosition(famille, g.communities)!)}
+            </p>
+          )}
         </div>
         <div>
           <div class="fiche__indicateur">

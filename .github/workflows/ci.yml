@@ -143,15 +143,19 @@ jobs:
           # Lien direct vers une fiche : l'application est servie (régression S5 : 404).
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/media/le-monde)" = 200
           curl -s http://localhost:8080/media/le-monde/ | grep -q '<div id="app">'
-          curl -s http://localhost:8080/data/graph.json | grep -q '"format":1'
+          curl -s http://localhost:8080/data/graph.json | grep -q '"format":2'
           # Pages pré-générées (T-069, T-070) : servies directement, avec leurs balises.
-          for page in methode tableau proprietaires; do
+          for page in methode tableau; do
             test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/$page)" = 200
           done
           curl -s http://localhost:8080/methode | grep -q 'Ce que la carte ne mesure pas'
           # Page JT retirée en V2 : redirection permanente vers la carte.
           curl -sI http://localhost:8080/jt | tee jt.txt | grep -q "^HTTP/1.1 301"
           grep -qi "^location: /\s*$" jt.txt
+          # Page Propriétaires retirée en V2 : redirection vers la carte, paramètres conservés.
+          curl -sI "http://localhost:8080/proprietaires?proprietaire=xavier-niel" | tee prop.txt \
+            | grep -q "^HTTP/1.1 301"
+          grep -qi "^location: /?proprietaire=xavier-niel\s*$" prop.txt
           curl -s http://localhost:8080/media/le-monde/ | grep -q 'property="og:title" content="Le Monde'
           docker compose down
 

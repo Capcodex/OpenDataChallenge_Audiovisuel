@@ -142,7 +142,7 @@ export function genererPages(dist: string, g: Graphe, methode: Methode): number 
   const corpsPages: Partial<Record<Page, string>> = {
     methode: `<main class="statique methode">${methode.html}</main>`,
   };
-  for (const page of ["proprietaires", "methode", "tableau"] as const) {
+  for (const page of ["methode", "tableau"] as const) {
     const { titre, description } = fr.pages[page];
     const url = `${adresse}${CHEMINS[page]}`;
     ecrire(

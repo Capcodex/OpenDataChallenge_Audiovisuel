@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ErreurDonnees, verifierGraphe } from "./charger";
 
 const minimal = () => ({
-  meta: { format: 1 },
+  meta: { format: 2 },
   nodes: [{ id: "a" }, { id: "b" }],
   edges: [{ s: "a", t: "b" }],
 });
@@ -14,7 +14,7 @@ describe("verifierGraphe", () => {
   });
 
   it("refuse un autre format", () => {
-    expect(() => verifierGraphe({ ...minimal(), meta: { format: 2 } })).toThrow(ErreurDonnees);
+    expect(() => verifierGraphe({ ...minimal(), meta: { format: 1 } })).toThrow(ErreurDonnees);
   });
 
   it("refuse un lien vers un média inconnu", () => {
