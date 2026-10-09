@@ -16,8 +16,10 @@ export const REGLAGES_SIGMA = {
   labelRenderedSizeThreshold: 8,
   minCameraRatio: 0.1,
   maxCameraRatio: 2,
-  // Survol des liens : phrase d'explication (E3-05, RG-22).
-  enableEdgeEvents: true,
+  // Survol des liens (E3-05, RG-22) : activé au premier passage de la souris sur la carte
+  // (Carte.tsx). Actif dès le chargement, il double chaque rendu (image de repérage des liens) et
+  // bloque le fil principal sur les machines sans accélération graphique (budget Lighthouse).
+  enableEdgeEvents: false,
 } as const;
 
 // Jetons de design (styles/jetons.css) ; Sigma dessine en WebGL et ne lit pas les variables CSS.
