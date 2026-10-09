@@ -159,8 +159,21 @@
 }
 
 .legende__titre {
-  margin: 0 0 var(--espace-3);
+  margin: 0;
   font-size: var(--taille-14);
+}
+
+.legende__entete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-3) var(--espace-6);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--espace-4);
+}
+
+.legende__famille--fixe {
+  cursor: default;
 }
 
 .legende__familles {
@@ -1076,14 +1089,13 @@ a.bouton {
   border-top: 1px solid var(--couleur-surface-discrete);
 }
 
-/* Calque propriétaires (maquette « Calque propriétaires ») */
-.principal--trois > .panneau:first-child {
-  max-width: 320px;
+/* Calque propriétaires, dans le panneau de la carte (V2) */
+.proprietaires {
+  margin-top: var(--espace-6);
 }
 
-.proprietaires h1 {
-  margin: 0 0 var(--espace-3);
-  font-size: var(--taille-18);
+.proprietaires:first-child {
+  margin-top: 0;
 }
 
 .proprietaires .champ {
@@ -1260,4 +1272,17 @@ a.bouton {
 .export__boutons .bouton--principal {
   flex: 2;
   width: auto;
+}
+
+/* Positionnement relatif du public des familles (V2, ADR-011) */
+.legende__famille-texte {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--espace-2) 0;
+}
+
+.legende__position {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-12);
 }

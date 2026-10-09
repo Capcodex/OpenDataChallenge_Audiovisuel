@@ -374,7 +374,7 @@ Données de la carte, au format décrit et validé par [`site/src/graph/schema.j
 | `nodes[]` | Un média affichable : `id`, `label`, `aliases`, `type`, `public`, `x`, `y`, `community`, `stability`, `bridge`, `n`, `share`, `fragile`, `pol`, `age`, `under35`, `trust`, `trust_gap` (triplets [valeur, borne basse, borne haute], `null` si non publiés), `pol_nr`, `group`, `owners[] {id, share}`, `owner_status` |
 | `others[]` | Médias sous le seuil (RG-02) : `id`, `label`, `aliases`, `type` seulement |
 | `edges[]` | Liens retenus : `s`, `t`, `lift`, `ci` [bas, haut], `n` (répondants communs), `shown` (tracé sur la carte) |
-| `communities[]` | `id`, `label` (provisoire), `color`, `size` |
+| `communities[]` | `id`, `label` (provisoire), `color`, `size`, `pol` (positionnement moyen du public de la famille [valeur, bas, haut]), `pol_n`, `position` (`gauche`, `centre`, `droite` ou `null`, relatif aux autres familles, ADR-011) |
 | `owners[]` | `id`, `name`, `type`, `source`, `as_of` |
 | `jt` | `channels`, `rubrics`, `years`, `periods`, `profiles[mesure][chaîne][année][rubrique]` (parts), `similarity[]` (`a`, `b`, `period`, `measure`, `js`, `sync`) |
 

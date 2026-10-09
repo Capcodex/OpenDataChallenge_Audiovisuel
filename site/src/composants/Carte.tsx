@@ -20,8 +20,10 @@ import {
   selection,
   survol,
   visible,
+  vue,
 } from "../etat/magasin";
 import type { Graphe } from "../graph/types";
+import { couleursProprietaires } from "../proprietaires/couleurs";
 import { fr, phraseLien } from "../i18n/fr";
 import {
   COULEUR_ESTOMPEE,
@@ -59,6 +61,7 @@ export function Carte({
   useEffect(() => {
     if (!webgl || !conteneur.current) return;
     const graphe = construireGraphe(donnees);
+    const couleursParProprietaire = couleursProprietaires(donnees);
     // Média mis en évidence : sélectionné, sinon survolé. Un média sous le seuil (RG-02) n'a pas de
     // point sur la carte : rien n'est mis en évidence.
     const mediaActif = () => {
@@ -69,7 +72,9 @@ export function Carte({
     const sigma = new Sigma(graphe, conteneur.current, {
       settings: REGLAGES_SIGMA,
       nodeReducer: (id, brut) => {
-        const data = { ...brut, labelFont: POLICE };
+        // Vue Propriétaires : couleur du propriétaire principal ; vue Familles : celle du graphe.
+        const couleur = vue.value === "proprietaires" ? couleursParProprietaire.get(id) : undefined;
+        const data = { ...brut, labelFont: POLICE, ...(couleur ? { color: couleur } : {}) };
         const actif = mediaActif();
         const noeud = noeudsParId.value.get(id);
         if (noeud && !visible(noeud)) return { ...data, visibility: "hidden" };
@@ -127,6 +132,7 @@ export function Carte({
       void filtreTypes.value;
       void filtreFamille.value;
       void mediasDuProprietaire.value;
+      void vue.value;
       sigma.refresh({ skipIndexation: true });
     });
 

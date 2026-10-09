@@ -10,6 +10,9 @@ const baseURL = process.env.BASE_URL ?? "http://localhost:8080";
 export default defineConfig({
   testDir: "tests",
   fullyParallel: true,
+  // Deux navigateurs à la fois, comme la CI : au-delà, le lancement du Chromium complet (requis
+  // pour le presse-papiers, voir use.channel) dépasse parfois 30 s sur un poste chargé.
+  workers: 2,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],

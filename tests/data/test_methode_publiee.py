@@ -81,3 +81,26 @@ def test_parametres_publies(methode, graphe):
     for cle in ("media_affichable_min", "chiffre_fragile_sous", "lien_effectif_commun_min"):
         assert f"| `{cle}` | {seuils[cle]} |" in methode
     assert f"| `publication.date_traitement` | {graphe['meta']['date_traitement']} |" in methode
+
+
+def _virgule(x: float) -> str:
+    return f"{x:.1f}".replace(".", ",")
+
+
+def test_positionnement_des_familles_publie(methode, graphe):
+    """ADR-011 : le tableau de la méthode reprend positionnement, marge et libellé de graph.json."""
+    familles = graphe["communities"]
+    for f in familles:
+        moy, bas, haut = f["pol"]
+        partage = sum(1 for g in familles if g["position"] == f["position"]) > 1
+        if f["position"] is None:
+            libelle = "—"
+        elif f["position"] == "centre":
+            libelle = f"Public au centre des {len(familles)} familles"
+        else:
+            plus = "parmi les plus" if partage else "le plus"
+            libelle = f"Public {plus} à {f['position']} des {len(familles)} familles"
+        ligne = (
+            f"| {f['id']} | {_virgule(moy)} (marge {_virgule(bas)}–{_virgule(haut)}) | {libelle} |"
+        )
+        assert ligne in methode, ligne

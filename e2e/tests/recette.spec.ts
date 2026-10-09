@@ -25,16 +25,12 @@ test.beforeEach(({ page }) => {
 test("Thomas : calque d'un propriétaire, puis export de l'image avec sa source", async ({
   page,
 }) => {
+  // V2 : le calque fait partie de la carte (vue Propriétaires, par défaut).
   await page.goto("/");
-  await page
-    .getByRole("navigation", { name: "Navigation principale" })
-    .getByRole("link", { name: "Propriétaires" })
-    .click();
-  await expect(page).toHaveURL(/\/proprietaires$/);
-
+  const liste = page.getByRole("list", { name: "Propriétaires" });
   await page.getByRole("searchbox", { name: "Filtrer la liste" }).fill("Saadé");
-  await page.getByRole("button", { name: /Rodolphe Saadé/ }).click();
-  await expect(page).toHaveURL(/proprietaire=rodolphe-saade$/);
+  await liste.getByRole("button", { name: /Rodolphe Saadé/ }).click();
+  await expect(page).toHaveURL(/\?proprietaire=rodolphe-saade$/);
   const synthese = page.getByRole("complementary", {
     name: "Synthèse du propriétaire",
   });
@@ -65,6 +61,9 @@ test("Thomas : calque d'un propriétaire, puis export de l'image avec sa source"
   const svg = await (await telechargement.createReadStream()).toArray();
   const texte = Buffer.concat(svg).toString("utf-8");
   expect(texte).toContain("Médias détenus par Rodolphe Saadé");
+  // Légende du cartouche : celle de la vue Propriétaires.
+  expect(texte).toContain("République française");
+  expect(texte).toContain("Non identifié");
   expect(texte).toContain("BFM TV");
   expect(texte).toContain(
     "Elle décrit des publics, pas des lignes éditoriales.",
@@ -73,6 +72,95 @@ test("Thomas : calque d'un propriétaire, puis export de l'image avec sa source"
     /Source : Arcom, baromètre « Les Français et l'information » \d{4}/,
   );
   await expect(dialogue).toBeHidden();
+});
+
+test("vues : Propriétaires par défaut, Familles au clavier, conservées dans l'adresse", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const vues = page.getByRole("group", { name: "Couleur des points" });
+  await expect(
+    vues.getByRole("button", { name: "Propriétaires" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("heading", { name: "Propriétaire principal" }),
+  ).toBeVisible();
+  await expect(page.getByRole("list", { name: "Propriétaires" })).toBeVisible();
+
+  await vues.getByRole("button", { name: "Familles" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\?vue=familles$/);
+  await expect(
+    page.getByRole("heading", { name: "Familles de médias" }),
+  ).toBeVisible();
+  await expect(page.getByRole("list", { name: "Propriétaires" })).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: /^Famille 2/ }).click();
+  await expect(page).toHaveURL(/\?vue=familles&famille=2$/);
+
+  // La vue se rouvre à l'identique ; revenir aux propriétaires retire le filtre de famille.
+  await page.reload();
+  await expect(vues.getByRole("button", { name: "Familles" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await vues.getByRole("button", { name: "Propriétaires" }).click();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("vue Familles : positionnement relatif du public, légende, fiche et export (ADR-011)", async ({
+  page,
+}) => {
+  await page.goto("/?vue=familles");
+  const legende = page.getByRole("region", { name: "Familles de médias" });
+  await expect(
+    legende.getByRole("button", { name: /Famille 3/ }),
+  ).toContainText(
+    /Public le plus à gauche des 3 familles · [\d,]+ sur 10, marge [\d,]+–[\d,]+/,
+  );
+  await expect(
+    legende.getByRole("button", { name: /Famille 1/ }),
+  ).toContainText("Public parmi les plus à droite des 3 familles");
+  await expect(legende).toContainText("comparé à celui des autres familles");
+
+  // Fiche d'un média de la famille 3 : libellé de sa famille, dans le profil du public.
+  await page.goto("/media/brut?vue=familles");
+  await expect(
+    page.getByRole("complementary", { name: "Fiche média" }),
+  ).toContainText("Famille 3 : public le plus à gauche des 3 familles.");
+
+  await page.getByRole("button", { name: "Exporter l'image" }).click();
+  await page.getByRole("radio", { name: /SVG/ }).check();
+  const [telechargement] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Télécharger le SVG" }).click(),
+  ]);
+  const texte = Buffer.concat(
+    await (await telechargement.createReadStream()).toArray(),
+  ).toString("utf-8");
+  expect(texte).toContain("Famille 3 · public le plus à gauche des 3 familles");
+});
+
+test("légende : un clic sur un propriétaire fait ressortir ses médias", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("region", { name: "Propriétaire principal" })
+    .getByRole("button", { name: /Xavier Niel/ })
+    .click();
+  await expect(page).toHaveURL(/\?proprietaire=xavier-niel$/);
+  const synthese = page.getByRole("complementary", {
+    name: "Synthèse du propriétaire",
+  });
+  await expect(
+    synthese.getByRole("link", { name: "Le Monde", exact: true }),
+  ).toBeVisible();
+  await synthese
+    .getByRole("button", { name: "Tous les propriétaires" })
+    .click();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test("Thomas : export PNG depuis la carte", async ({ page }) => {
@@ -220,7 +308,7 @@ test("sources : mention Arcom, licence et date des données sur chaque écran (C
     "/media/france-inter",
     "/methode",
     "/tableau",
-    "/proprietaires",
+    "/?vue=familles",
   ]) {
     await page.goto(adresse);
     const pied = page.getByRole("contentinfo");
@@ -238,7 +326,8 @@ const ECRANS: [string, string, ((page: Page) => Promise<void>)?][] = [
   ["effectif insuffisant", "/media/skyrock"],
   ["méthode", "/methode"],
   ["tableau", "/tableau"],
-  ["propriétaires", "/proprietaires?proprietaire=rodolphe-saade"],
+  ["vue Propriétaires, propriétaire choisi", "/?proprietaire=rodolphe-saade"],
+  ["vue Familles", "/?vue=familles"],
   [
     "recherche ouverte",
     "/",

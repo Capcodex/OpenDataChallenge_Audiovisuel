@@ -1,5 +1,5 @@
 {
-  "version_pipeline": "0.1.0",
+  "version_pipeline": "2.0.0",
   "edition": "2026",
   "date_traitement": "2026-10-08",
   "sources": [
@@ -188,7 +188,42 @@
     },
     "ari_moyen": 0.8567,
     "part_medias_stables": 0.9412,
-    "familles_affichees": true
+    "familles_affichees": true,
+    "publics": [
+      {
+        "famille": 1,
+        "n_repondants": 2558,
+        "pol_n": 2530,
+        "pol": [
+          5.5871,
+          5.4655,
+          5.7188
+        ],
+        "position": "droite"
+      },
+      {
+        "famille": 2,
+        "n_repondants": 2538,
+        "pol_n": 2513,
+        "pol": [
+          5.5854,
+          5.4692,
+          5.7111
+        ],
+        "position": "droite"
+      },
+      {
+        "famille": 3,
+        "n_repondants": 927,
+        "pol_n": 914,
+        "pol": [
+          5.3453,
+          5.1283,
+          5.5707
+        ],
+        "position": "gauche"
+      }
+    ]
   },
   "proprietes": {
     "medias_affichables": 68,

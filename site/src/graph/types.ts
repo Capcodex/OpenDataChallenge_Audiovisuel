@@ -41,11 +41,18 @@ export interface Lien {
   shown: boolean;
 }
 
+export type PositionFamille = "gauche" | "centre" | "droite";
+
 export interface Famille {
   id: number;
   label: string;
   color: string;
   size: number;
+  /** Positionnement moyen du public de la famille, avec marge (V2, ADR-011). */
+  pol: Triplet;
+  pol_n: number;
+  /** Libellé relatif du public, comparé aux autres familles ; null si aucun écart significatif. */
+  position: PositionFamille | null;
 }
 
 export interface Proprietaire {
@@ -74,7 +81,7 @@ export interface Jt {
 
 export interface Graphe {
   meta: {
-    format: 1;
+    format: 2;
     edition: string;
     date_traitement: string;
     version_pipeline: string;

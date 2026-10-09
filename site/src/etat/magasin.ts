@@ -7,7 +7,14 @@ import { computed, effect, signal } from "@preact/signals";
 import { cinqVoisins } from "../fiche/fiche-donnees";
 import type { Graphe, Noeud, TypeMedia } from "../graph/types";
 import { pageDepuisChemin, type Page } from "../pages";
-import { ETAT_VIDE, etatDepuisUrl, urlDepuisEtat, type EtatUrl } from "./url";
+import {
+  ETAT_VIDE,
+  etatDepuisUrl,
+  urlDepuisEtat,
+  VUE_PAR_DEFAUT,
+  type EtatUrl,
+  type Vue,
+} from "./url";
 
 /** Page affichée, lue dans l'adresse au démarrage (les pages sont des fichiers distincts). */
 export const page = signal<Page>(
@@ -22,7 +29,10 @@ export const filtreTypes = signal<TypeMedia[]>([]);
 export const filtreFamille = signal<number | null>(null);
 export const survol = signal<string | null>(null);
 
-/** Calque propriétaires (E4-02) : propriétaire choisi et ses médias affichés. */
+/** Couleur des points de la carte (V2) : propriétaire principal (par défaut) ou famille. */
+export const vue = signal<Vue>(VUE_PAR_DEFAUT);
+
+/** Calque propriétaires (E4-02) : propriétaire choisi et ses médias, mis en avant sur la carte. */
 export const proprietaireActif = signal<string | null>(null);
 export const mediasDuProprietaire = computed(() => {
   const id = proprietaireActif.value;
@@ -82,14 +92,29 @@ export function visible(n: Noeud): boolean {
   );
 }
 
+/** Changer de vue retire le filtre propre à l'autre vue (famille ou propriétaire). */
+export function changerVue(nouvelle: Vue): void {
+  vue.value = nouvelle;
+  if (nouvelle === "familles") proprietaireActif.value = null;
+  else filtreFamille.value = null;
+}
+
 export function etatCourant(): EtatUrl {
-  return { media: selection.value, types: filtreTypes.value, famille: filtreFamille.value };
+  return {
+    media: selection.value,
+    vue: vue.value,
+    types: filtreTypes.value,
+    famille: filtreFamille.value,
+    proprietaire: proprietaireActif.value,
+  };
 }
 
 export function appliquer(etat: EtatUrl): void {
   selection.value = etat.media;
+  vue.value = etat.vue;
   filtreTypes.value = etat.types;
   filtreFamille.value = etat.famille;
+  proprietaireActif.value = etat.proprietaire;
 }
 
 /** Lit l'URL au démarrage, puis tient l'URL à jour (retour arrière du navigateur compris). */
@@ -97,7 +122,9 @@ export function synchroniserUrl(g: Graphe): () => void {
   // Les médias sous le seuil ont aussi une adresse : leur fiche explique l'effectif insuffisant.
   const medias = new Set([...g.nodes, ...g.others].map((n) => n.id));
   const familles = new Set(g.communities.map((c) => c.id));
-  const lire = () => appliquer(etatDepuisUrl(location.pathname, location.search, medias, familles));
+  const proprietaires = new Set(g.nodes.flatMap((n) => n.owners.map((o) => o.id)));
+  const lire = () =>
+    appliquer(etatDepuisUrl(location.pathname, location.search, medias, familles, proprietaires));
   lire();
   addEventListener("popstate", lire);
   const arreter = effect(() => {

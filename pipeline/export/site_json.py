@@ -179,6 +179,8 @@ def construire(
     ]
 
     tailles = familles["famille"].value_counts()
+    # Positionnement du public de chaque famille et libellé relatif (V2, ADR-011).
+    publics = {p["famille"]: p for p in journal_familles["publics"]}
     communities = [
         {
             "id": int(k),
@@ -186,6 +188,9 @@ def construire(
             "label": f"Famille {int(k)}",
             "color": COULEURS_FAMILLES[(int(k) - 1) % len(COULEURS_FAMILLES)],
             "size": int(tailles[k]),
+            "pol": [arrondi(v) for v in publics[int(k)]["pol"]],
+            "pol_n": publics[int(k)]["pol_n"],
+            "position": publics[int(k)]["position"],
         }
         for k in sorted(tailles.index)
     ]
@@ -208,7 +213,7 @@ def construire(
 
     return {
         "meta": {
-            "format": 1,
+            "format": 2,  # 2 : positionnement du public des familles (ADR-011)
             "edition": params.edition,
             "date_traitement": params.publication.date_traitement,
             "version_pipeline": __version__,

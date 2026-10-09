@@ -6,7 +6,6 @@ import { EnTete } from "./composants/EnTete";
 import { BoutonExport } from "./composants/Export";
 import { Legende } from "./composants/Legende";
 import { PageMethode } from "./composants/PageMethode";
-import { PageProprietaires } from "./composants/PageProprietaires";
 import { Panneau } from "./composants/Panneau";
 import { PiedDePage } from "./composants/PiedDePage";
 import { FiltresTypes } from "./composants/FiltresTypes";
@@ -25,9 +24,6 @@ function PageCarte({ donnees: g }: { donnees: Graphe }) {
           <div class="barre-carte">
             <FiltresTypes donnees={g} />
             <div class="barre-carte__actions">
-              <a class="bouton" href="/proprietaires">
-                {fr.actions.calqueProprietaires}
-              </a>
               <a class="bouton" href="/tableau">
                 {fr.actions.vueTableau}
               </a>
@@ -35,7 +31,7 @@ function PageCarte({ donnees: g }: { donnees: Graphe }) {
             </div>
           </div>
           <Carte donnees={g} />
-          <Legende familles={g.communities} affichees={g.meta.communities_displayed} />
+          <Legende donnees={g} />
         </div>
       ) : (
         // Bascule automatique (ENF-08, maquette « États », cas 5) : tout reste accessible.
@@ -57,8 +53,6 @@ function Contenu({ donnees: g }: { donnees: Graphe }) {
       return <PageMethode />;
     case "tableau":
       return <PageTableau donnees={g} />;
-    case "proprietaires":
-      return <PageProprietaires donnees={g} />;
     default:
       return <PageCarte donnees={g} />;
   }

@@ -99,6 +99,16 @@ En 2026 : **3 familles, 94 % des médias stables** ([ADR-007](decisions/ADR-007-
 
 Un découpage plus fin, en 4 familles, n'est pas assez stable (75 %) : il n'est pas affiché.
 
+**Le public des familles, comparé.** Pour chaque famille, on calcule le positionnement moyen de son **public** : les personnes qui suivent au moins un de ses médias, sur l'échelle de 0 (très à gauche) à 10 (très à droite), avec sa marge. Les familles sont ensuite comparées entre elles : deux familles ne sont distinguées que si leur écart est significatif (l'intervalle à 95 % de la différence, calculée sur les mêmes 1 000 tirages, exclut zéro). La légende indique alors « Public le plus à gauche des 3 familles » ou « Public parmi les plus à droite des 3 familles ». **Ces libellés sont relatifs** : tous les publics sont proches du centre de l'échelle, et les écarts sont faibles ([ADR-011](decisions/ADR-011-positionnement-relatif-des-familles.md)).
+
+| Famille | Public : positionnement moyen | Libellé |
+|---|---|---|
+| 1 | 5,6 (marge 5,5–5,7) | Public parmi les plus à droite des 3 familles |
+| 2 | 5,6 (marge 5,5–5,7) | Public parmi les plus à droite des 3 familles |
+| 3 | 5,3 (marge 5,1–5,6) | Public le plus à gauche des 3 familles |
+
+L'écart entre la famille 3 et les deux autres est de 0,24 point (marge 0,05–0,42) ; les familles 1 et 2 ne se distinguent pas (écart 0,00, marge −0,07–0,07).
+
 **Médias « ponts ».** Certains médias ont des liens dans plusieurs familles. Le **coefficient de participation** mesure cette répartition : 0 si tous les liens du média restent dans sa famille, davantage s'ils se partagent entre plusieurs. Les 10 médias au coefficient le plus élevé sont signalés comme « ponts » (`ponts_nombre`).
 
 ## 6. La disposition de la carte
@@ -113,6 +123,7 @@ La position des médias est calculée une fois pour toutes par l'algorithme Forc
 - Ses **propriétaires** sont les personnes, familles, États ou organisations au sommet de la chaîne de détention.
 - La **part** indiquée est la part effective du capital. Par exemple, la famille Bouygues détient 24 % de Bouygues, qui détient 44 % du Groupe TF1 : sa part dans TF1 est de 24 % × 44 % ≈ 10,6 %. Quand la base indique un « contrôle » sans pourcentage, la part n'est pas chiffrée.
 - Les journaux télévisés ont les propriétaires de leur chaîne.
+- **Couleurs de la carte (vue Propriétaires, par défaut).** Chaque média prend la couleur de son **propriétaire principal** : celui qui le **contrôle** (« contrôle » sans pourcentage dans la base), ou à défaut celui qui détient la **plus grande part**. Exemples : M6 et RTL ont pour propriétaire principal la famille Mohn, qui les contrôle, et non Rodolphe Saadé (7,3 %) ; TF1 la famille Bouygues (10,6 %, contre 5 % pour Daniel Křetínský). Si plusieurs propriétaires contrôlent un média (Arte : États français et allemand), le premier listé est retenu. Les 7 propriétaires principaux du plus grand nombre de médias ont chacun une couleur ; les autres sont regroupés en « autres propriétaires ». Choisir un propriétaire fait ressortir **tous** ses médias, participations minoritaires comprises.
 - Les médias absents de la base sont indiqués comme **« propriétaire non identifié »**. C'est le cas de la presse indépendante, des médias en ligne et des créateurs de contenu : 16 médias en 2026. Aucune information de propriété n'est publiée sans source.
 
 ## 8. Le module JT : de quoi parlent les JT du soir (2000-2020)

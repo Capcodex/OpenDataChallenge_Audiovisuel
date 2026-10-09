@@ -71,3 +71,21 @@ def test_disposition_reproductible(entrees, params):
         params.seed,
     )
     pd.testing.assert_frame_equal(sortie, pd.read_parquet(DISPOSITION))
+
+
+def test_positionnement_des_publics_de_familles_publie_et_coherent():
+    """V2, ADR-011 : chaque famille publie le positionnement de son public, avec sa marge, et un
+    libellé relatif cohérent avec l'ordre des moyennes."""
+    graphe = json.loads((CHEMINS.site_public / "data" / "graph.json").read_text())
+    familles = graphe["communities"]
+    rang = {"gauche": 0, "centre": 1, "droite": 2}
+    for f in familles:
+        moy, bas, haut = f["pol"]
+        assert 0 <= bas <= moy <= haut <= 10
+        assert f["pol_n"] > 0
+    positions = [f["position"] for f in sorted(familles, key=lambda f: f["pol"][0])]
+    if any(positions):
+        assert positions[0] == "gauche" and positions[-1] == "droite"
+        assert [rang[p] for p in positions] == sorted(rang[p] for p in positions)
+    if not graphe["meta"]["communities_displayed"]:
+        assert not any(positions)

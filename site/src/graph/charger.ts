@@ -1,7 +1,7 @@
 import type { Graphe } from "./types";
 
 export const URL_DONNEES = "/data/graph.json";
-const FORMAT_ATTENDU = 1;
+const FORMAT_ATTENDU = 2; // ADR-011
 
 export class ErreurDonnees extends Error {}
 

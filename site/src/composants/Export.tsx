@@ -5,22 +5,15 @@
  */
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { visible } from "../etat/magasin";
+import { mediasDuProprietaire, proprietaireActif, visible, vue } from "../etat/magasin";
 import { imagePng, imageSvg, TAILLES, telecharger } from "../export/image-svg";
 import type { Graphe } from "../graph/types";
 import { fr } from "../i18n/fr";
+import { couleursProprietaires, legendeProprietaires } from "../proprietaires/couleurs";
 
 type Format = "png" | "svg";
 
-export function BoutonExport({
-  donnees: g,
-  misEnAvant = null,
-  titre,
-}: {
-  donnees: Graphe;
-  misEnAvant?: ReadonlySet<string> | null;
-  titre?: string;
-}) {
+export function BoutonExport({ donnees: g }: { donnees: Graphe }) {
   const dialogue = useRef<HTMLDialogElement>(null);
   const [ouvert, setOuvert] = useState(false);
   const [format, setFormat] = useState<Format>("png");
@@ -29,6 +22,27 @@ export function BoutonExport({
   const [liens, setLiens] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const t = fr.export;
+
+  // Vue en cours : couleurs et légende des propriétaires, et propriétaire choisi (calque).
+  const enProprietaires = vue.value === "proprietaires";
+  const coloration = useMemo(() => {
+    if (!enProprietaires) return null;
+    const entrees = legendeProprietaires(g);
+    return {
+      couleurs: couleursProprietaires(g, entrees),
+      legende: entrees.map((e) => ({
+        libelle:
+          e.libelle ??
+          (e.cle === "autres" ? fr.legende.autresProprietaires : fr.legende.nonIdentifie),
+        couleur: e.couleur,
+      })),
+    };
+  }, [g, enProprietaires]);
+  const misEnAvant = enProprietaires ? mediasDuProprietaire.value : null;
+  const nomProprietaire = enProprietaires
+    ? g.owners.find((o) => o.id === proprietaireActif.value)?.name
+    : undefined;
+  const titre = nomProprietaire ? t.titreProprietaire(nomProprietaire) : undefined;
 
   const svg = useMemo(
     () =>
@@ -39,9 +53,10 @@ export function BoutonExport({
             liens,
             misEnAvant,
             titre,
+            coloration,
           })
         : "",
-    [g, ouvert, taille, noms, liens, misEnAvant, titre],
+    [g, ouvert, taille, noms, liens, misEnAvant, titre, coloration],
   );
   const [apercu, setApercu] = useState<string | null>(null);
   useEffect(() => {

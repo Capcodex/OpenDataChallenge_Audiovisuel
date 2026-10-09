@@ -23,8 +23,8 @@
       ],
       "properties": {
         "format": {
-          "const": 1,
-          "description": "Version du format ; changée seulement si le site doit être adapté"
+          "const": 2,
+          "description": "Version du format ; changée seulement si le site doit être adapté (2 : communities[].pol, pol_n, position, ADR-011)"
         },
         "edition": {
           "type": "string"
@@ -330,7 +330,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "label", "color", "size"],
+        "required": ["id", "label", "color", "size", "pol", "pol_n", "position"],
         "properties": {
           "id": {
             "type": "integer",
@@ -346,6 +346,26 @@
           "size": {
             "type": "integer",
             "minimum": 1
+          },
+          "pol": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "Positionnement moyen du public de la famille (0 très à gauche, 10 très à droite) : [valeur, borne basse, borne haute] à 95 % (ADR-011)"
+          },
+          "pol_n": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Répondants du public de la famille ayant donné une note politique"
+          },
+          "position": {
+            "enum": ["gauche", "centre", "droite", null],
+            "description": "Libellé relatif du public, comparé aux autres familles ; null si aucun écart significatif ou familles non affichées (ADR-011)"
           }
         }
       }

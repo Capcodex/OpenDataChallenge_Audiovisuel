@@ -111,3 +111,47 @@ Critères : **4 testeurs sur 5** réussissent chaque scénario ; **4 sur 5** ref
 - [ ] Étiquette `demo` du service d'aperçu retirée (`gcloud run services update-traffic graphe-medias-apercu --region europe-west9 --remove-tags demo`)
 
 **Incident du premier déploiement (9 octobre 2026).** La révision `v1.0.0` a été créée, mais l'étape suivante du workflow a échoué : le calcul de l'adresse appelait l'API Cloud Resource Manager, non activée sur le projet. Le retour arrière automatique a rendu le trafic à la page de démonstration, comme prévu. La révision, vérifiée sur une adresse temporaire sans trafic (tous contrôles verts), a ensuite été mise en service à la main. Correctif : le workflow lit l'adresse dans `config/params.yaml`, validé par le déploiement de `v1.0.1`.
+
+---
+
+# Recette · V2 (2.0.0)
+
+**Recette :** 9 octobre 2026 · **Changements :** retrait de la page JT, carte unique avec vues Propriétaires (par défaut) et Familles, positionnement relatif du public des familles ([ADR-011](decisions/ADR-011-positionnement-relatif-des-familles.md)) · **Bilan :** [docs/sprints/v2.md](sprints/v2.md)
+
+## Synthèse
+
+| Recette | Résultat |
+|---|---|
+| Données | ✅ 5 critères de la V1 toujours tenus ; nouveau calcul reproductible et vérifié |
+| Fonctionnelle | ✅ 4 scénarios automatisés (Thomas adapté à la carte unique) · ⏳ tests utilisateurs de la V1 toujours à mener |
+| Conformité | ✅ vocabulaire (charte amendée par l'ADR-011), sources, accessibilité, performance |
+| Anomalies | ✅ 0 bloquante, 0 majeure |
+
+## Données
+
+| Critère | Résultat | Preuve |
+|---|---|---|
+| Effectifs, pondération, liens | ✅ inchangés depuis la V1 | `tests/data/` (54 tests sur les données → 56) |
+| Positionnement du public des familles | ✅ moyenne pondérée sur les répondants qui suivent au moins un média de la famille, marge sur les mêmes 1 000 tirages ; bornes cohérentes, libellés dans l'ordre des moyennes | `tests/unit/test_publics_familles.py`, `tests/data/test_donnees_familles.py` |
+| Libellés relatifs | ✅ famille 3 « le plus à gauche », familles 1 et 2 « parmi les plus à droite » : écart de 0,24 point (marge 0,05–0,42), familles 1 et 2 indistinguables | test apparié tirage par tirage (ADR-011) |
+| Méthode publiée = calcul | ✅ positionnement, marge et libellé de chaque famille vérifiés dans `docs/methode.md` | `tests/data/test_methode_publiee.py` |
+| Reproductibilité | ✅ deux exécutions forcées : 29 fichiers identiques octet pour octet ; par rapport à la V1, seuls changent le format (2), la version (2.0.0) et les champs ajoutés aux familles | exécution du 9 octobre 2026 |
+
+## Fonctionnelle et conformité
+
+| Critère | Résultat | Preuve |
+|---|---|---|
+| Vues | ✅ Propriétaires par défaut ; bascule au clavier ; vue et propriétaire conservés dans l'adresse et au rechargement ; filtre de l'autre vue retiré | `recette.spec.ts` |
+| Propriétaire principal | ✅ contrôle prioritaire, sinon plus grande part (M6 → famille Mohn, Europe 1 → Vincent Bolloré, TF1 → famille Bouygues) | `couleurs.test.ts` |
+| Scénario de Thomas | ✅ propriétaire choisi sur la carte, export SVG avec titre, légende des propriétaires et cartouche | `recette.spec.ts` |
+| Liens anciens | ✅ `/jt` → `/` et `/proprietaires?proprietaire=x` → `/?proprietaire=x` (301) | CI (image nginx), `verifier-production.sh` |
+| Neutralité | ✅ libellés sur le **public** des **familles**, relatifs, avec valeur et marge ; aucun média qualifié ; contrôle du vocabulaire vert | ADR-011, `npm run vocabulaire` |
+| Sources | ✅ sur chaque écran et dans les exports des deux vues | `recette.spec.ts` |
+| Accessibilité | ✅ axe-core : 0 violation grave ou critique sur 11 écrans (dont les deux vues) ; Lighthouse accessibilité 100 | `recette.spec.ts`, `lighthouse.mjs` |
+| Performance | ✅ Lighthouse 97 à 100 (poste réel) ; JavaScript 150 ko compressés | `lighthouse.mjs` |
+
+## Mise en production (v2.0.0)
+
+- [ ] 🤖 `scripts/verifier-production.sh` vert (redirections `/jt` et `/proprietaires` comprises)
+- [ ] Révision précédente notée pour un retour arrière : `graphe-medias-v1-0-0-10d9c0e-1` (ou `v1.0.1` si publiée)
+- [ ] Vue Propriétaires affichée par défaut sur https://graphe-medias-718967467429.europe-west9.run.app

@@ -28,11 +28,6 @@ export const fr = {
       description:
         "Quels médias partagent le même public ? Carte des médias français d'après le baromètre de l'Arcom.",
     },
-    proprietaires: {
-      titre: "Propriétaires des médias · Graphe des médias",
-      description:
-        "Choisir un propriétaire pour voir ses médias sur la carte des publics, avec la source de chaque donnée de propriété.",
-    },
     methode: {
       titre: "Méthode · Graphe des médias",
       description:
@@ -53,7 +48,6 @@ export const fr = {
   navigation: {
     libelle: "Navigation principale",
     carte: "Carte",
-    proprietaires: "Propriétaires",
     methode: "Méthode",
     donnees: "Données",
   },
@@ -79,7 +73,6 @@ export const fr = {
 
   actions: {
     comprendreMethode: "Comprendre la méthode",
-    calqueProprietaires: "Calque propriétaires",
     vueTableau: "Vue tableau",
     exporterImage: "Exporter l'image",
     exporter: "Exporter",
@@ -98,7 +91,6 @@ export const fr = {
     liste: "Propriétaires",
     nombreMedias: (n: number) => (n === 1 ? "1 média" : `${n} médias`),
     aucun: "Aucun propriétaire ne correspond.",
-    carte: "Carte avec calque propriétaires",
     synthese: "Synthèse du propriétaire",
     selectionne: "Propriétaire sélectionné",
     type: { personne: "Personne ou famille", etat: "État", organisation: "Organisation" } as Record<
@@ -111,10 +103,25 @@ export const fr = {
       n === 1
         ? "Ses médias sont tous dans la même famille de la carte."
         : `Ses médias sont répartis dans ${n} familles différentes de la carte.`,
-    partNonChiffree: "part non chiffrée",
+    partNonChiffree: "part de contrôle",
+    tous: "Tous les propriétaires",
     choisir: "Choisissez un propriétaire dans la liste.",
     nonIdentifies: (n: number) =>
       `${n} médias de la carte n'ont pas de propriétaire identifié dans la base (presse indépendante, médias en ligne, créateurs).`,
+  },
+
+  // V2, ADR-011 : positionnement relatif du PUBLIC des familles (jamais des médias, RG-20 amendée).
+  familles: {
+    position: (position: string, partage: boolean, nombre: number) =>
+      position === "centre"
+        ? `Public au centre des ${nombre} familles`
+        : `Public ${partage ? "parmi les plus" : "le plus"} à ${position} des ${nombre} familles`,
+    valeur: (moyenne: number, bas: number, haut: number) =>
+      `${formaterNombre(moyenne)} sur 10, marge ${formaterNombre(bas)}–${formaterNombre(haut)}`,
+    proches: "Publics de positionnement proche : aucun écart significatif entre les familles.",
+    lecture:
+      "Positionnement moyen du public de chaque famille, sur une échelle de 0 (très à gauche) à 10 (très à droite), comparé à celui des autres familles. Deux familles dont l'écart n'est pas significatif partagent le même libellé.",
+    dansFiche: (famille: string, texte: string) => `${famille} : ${texte.toLowerCase()}.`,
   },
 
   methode: {
@@ -123,6 +130,14 @@ export const fr = {
   },
 
   legende: {
+    vue: "Couleur des points",
+    vues: { proprietaires: "Propriétaires", familles: "Familles" } as Record<string, string>,
+    titreProprietaires: "Propriétaire principal",
+    lectureProprietaires:
+      "Couleur = propriétaire principal : celui qui contrôle le média, à défaut celui qui en détient la plus grande part. Cliquez sur un propriétaire pour faire ressortir tous ses médias.",
+    autresProprietaires: "Autres propriétaires",
+    nonIdentifie: "Non identifié",
+    filtrerProprietaire: (nom: string) => `Faire ressortir les médias de ${nom}`,
     titre: "Familles de médias",
     lecture: "Taille du point = part du public. Épaisseur du lien = proximité des publics.",
     famille: (numero: number) => `Famille ${numero}`,
@@ -165,7 +180,7 @@ export const fr = {
       "Cliquez sur un média de la carte ou recherchez-le pour voir les médias dont le public est le plus proche, le profil de son public et son propriétaire.",
     reperes: [
       "Deux médias reliés sont suivis par les mêmes personnes.",
-      "Les couleurs indiquent des familles de médias détectées automatiquement.",
+      "Les couleurs indiquent le propriétaire principal de chaque média, ou au choix des familles de médias détectées automatiquement.",
       "Chaque chiffre indique son effectif et sa marge d'incertitude.",
     ],
     resume: (medias: number, liens: number) =>
