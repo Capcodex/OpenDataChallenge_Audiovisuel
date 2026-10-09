@@ -130,17 +130,22 @@ export function Carte({
       sigma.refresh({ skipIndexation: true });
     });
 
-    const centrer = (id: string) => {
+    const centrer = (id: string, anime = true) => {
       const point = sigma.getNodeDisplayData(id);
       if (!point) return;
       const camera = sigma.getCamera();
-      void camera.animate(
-        { x: point.x, y: point.y, ratio: Math.min(camera.ratio, ZOOM_CENTRAGE) },
-        { duration: 300 },
-      );
+      const cible = { x: point.x, y: point.y, ratio: Math.min(camera.ratio, ZOOM_CENTRAGE) };
+      if (anime) void camera.animate(cible, { duration: 300 });
+      else camera.setState(cible);
     };
-    // Lien direct /media/<id> : la carte s'ouvre centrée sur le média.
-    if (selection.value && graphe.hasNode(selection.value)) centrer(selection.value);
+    // Lien direct /media/<id> : la carte s'ouvre centrée sur le média, sans animation (une
+    // animation au chargement enchaîne des dizaines de rendus avant que la page soit utilisable).
+    if (selection.value && graphe.hasNode(selection.value)) centrer(selection.value, false);
+
+    // Survol des liens activé à la première approche de la souris (voir REGLAGES_SIGMA).
+    const elementCarte = conteneur.current;
+    const activerSurvolLiens = () => sigma.setSetting("enableEdgeEvents", true);
+    elementCarte.addEventListener("pointerenter", activerSurvolLiens, { once: true });
     const arreterCentrage = effect(() => {
       const o = ouverture.value;
       if (o && o.provenance !== "carte" && graphe.hasNode(o.id)) centrer(o.id);
@@ -149,6 +154,7 @@ export function Carte({
     return () => {
       arreter();
       arreterCentrage();
+      elementCarte.removeEventListener("pointerenter", activerSurvolLiens);
       sigma.kill();
       rendu.current = null;
     };

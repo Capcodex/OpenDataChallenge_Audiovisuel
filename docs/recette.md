@@ -11,7 +11,7 @@ Référence : cahier des charges fonctionnel § 12 et exigences non fonctionnell
 | Données (§ 12.1, T-081) | ✅ 5 critères sur 5 |
 | Fonctionnelle (§ 12.2, T-082) | ✅ 4 scénarios automatisés · ⏳ tests avec 5 utilisateurs à mener |
 | Conformité (§ 12.3, T-083) | ✅ 4 critères sur 4 · ⏳ navigateurs autres que Chromium à vérifier à la main |
-| Anomalies (T-084) | ✅ 0 bloquante, 0 majeure ouverte · 7 mineures reportées en V2 |
+| Anomalies (T-084) | ✅ 0 bloquante, 0 majeure ouverte (3 corrigées) · 7 mineures reportées en V2 |
 | Mise en production (T-088) | ⏳ liste de contrôle à cocher après le déploiement de `v1.0.0` |
 
 ## 1. Recette des données (§ 12.1, T-081)
@@ -69,7 +69,7 @@ Critères : **4 testeurs sur 5** réussissent chaque scénario ; **4 sur 5** ref
 
 | Exigence | Critère | Mesure |
 |---|---|---|
-| ENF-01 | Carte affichée en moins de 3 s à 10 Mbit/s | ✅ LCP 0,5 à 0,6 s (Lighthouse « bureau » : 10 Mbit/s simulés) ; performance 97 à 100 sur 6 écrans |
+| ENF-01 | Carte affichée en moins de 3 s à 10 Mbit/s | ✅ LCP 0,5 à 0,6 s (Lighthouse « bureau » : 10 Mbit/s simulés) ; performance 97 à 100 sur 6 écrans, poste avec carte graphique (9 octobre 2026) |
 | ENF-02 | Données chargées < 2 Mo | ✅ `graph.json` : 181 ko ; JavaScript : 151 ko compressés |
 | ENF-03 | Fiche et voisins en moins de 200 ms | ✅ médiane de 5 ouvertures sous 200 ms (test automatisé) |
 | ENF-04 | Deux dernières versions de Chrome, Firefox, Safari, Edge | ⏳ Chromium testé automatiquement ; **Firefox et Safari à vérifier à la main** pendant les tests utilisateurs |
@@ -79,12 +79,15 @@ Critères : **4 testeurs sur 5** réussissent chaque scénario ; **4 sur 5** ref
 | ENF-11 | HTTPS, sans formulaire ni stockage | ✅ HTTPS (Cloud Run) ; en-têtes de sécurité dont HSTS (ajouté au sprint 8) ; aucun formulaire envoyé, aucun cookie |
 | ENF-12 | Résultats régénérables | ✅ voir § 1, reproductibilité |
 
+**Lighthouse dans la CI.** Les machines de GitHub Actions n'ont pas de carte graphique : Chromium y émule WebGL sur le processeur, et le premier rendu de la carte (compilation des shaders, atlas des étiquettes de Sigma 4) bloque le fil principal de 350 à 500 ms. Les pages avec carte y obtenaient 79 à 99 selon les passages, contre 100 sur un poste réel. Décision du porteur du projet (sprint 8) : dans la CI, performance ≥ 75 pour les trois pages avec carte, ≥ 90 pour les autres, accessibilité ≥ 95 partout ; le critère « ≥ 90 » est vérifié sur un poste réel avant chaque version (`BASE_URL=… npm run lighthouse` dans `e2e/`). Deux corrections ont réduit ce blocage d'environ un quart : survol des liens activé au premier passage de la souris, centrage initial sans animation.
+
 ## 4. Anomalies (T-084)
 
 | N° | Anomalie | Gravité | Statut |
 |---|---|---|---|
 | A-01 | En-tête HSTS absent (Cloud Run ne l'ajoute pas) | Majeure (sécurité, ENF-11) | ✅ Corrigée : en-tête ajouté à nginx, contrôlé par `verifier-production.sh` |
 | A-02 | Adresse du site provisoire (`graphe-medias.fr`, domaine non détenu) dans les liens permanents, la mention de source et les exports | Majeure | ✅ Corrigée : adresse de production dans `config/params.yaml`, sorties régénérées par le pipeline |
+| A-10 | Performance Lighthouse des pages avec carte sous 90 dans la CI (machines sans carte graphique) | Majeure (CI bloquée) | ✅ Corrigée : blocage réduit d'un quart ; seuil de 75 pour ces pages dans la CI, ≥ 90 vérifié sur poste réel |
 | A-03 | Profil détaillé du public comparé à l'ensemble (T-078, EF-M3-05, Should) | Mineure | V2 |
 | A-04 | Pas d'image d'aperçu Open Graph (`og:image`) | Mineure | V2 |
 | A-05 | Page JT : profils par année seulement (pas de profil de période) | Mineure | V2 (ajouter les profils de période à `graph.json`) |

@@ -21,7 +21,7 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 | T-081 | Recette des données | ✅ | 5 critères sur 5 ; pondération vérifiée à 0 près ; test ajouté : chaque chiffre de la méthode = journal du calcul |
 | T-082 | Recette fonctionnelle | 🟡 | 4 scénarios automatisés verts ; **tests avec 5 utilisateurs à mener** (protocole et grille dans `docs/recette.md`) |
 | T-083 | Recette de conformité | ✅ | Vocabulaire, sources sur chaque écran (test ajouté), axe-core, **Lighthouse ajouté à la CI** et à `make test-e2e` |
-| T-084 | Corrections des anomalies bloquantes et majeures | ✅ | 2 majeures corrigées (HSTS, adresse du site) ; 7 mineures reportées en V2 |
+| T-084 | Corrections des anomalies bloquantes et majeures | ✅ | 3 majeures corrigées (HSTS, adresse du site, budget Lighthouse en CI) ; 7 mineures reportées en V2 |
 | T-085 | Publication du dépôt | ✅ | README (démarrage sur un poste neuf, production), `CONTRIBUTING.md`, licences inchangées |
 | T-086 | Méthode avec les résultats réels | ✅ | Chiffres déjà réels depuis le sprint 7 ; désormais garantis par `tests/data/test_methode_publiee.py` |
 | T-087 | `deploy.yml` : images multi-architecture, production | ✅ | Étiquette `v*.*.*` sur `main` → ghcr.io (`amd64`, `arm64`) → copie dans Artifact Registry → déploiement → vérification → retour arrière automatique |
@@ -33,6 +33,7 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 - **Même image en production que sur ghcr.io** : Cloud Run ne lit pas ghcr.io ; l'image publiée est copiée telle quelle (même empreinte, vérifiée) dans Artifact Registry.
 - **Retour arrière automatique** : la révision en service est notée avant le déploiement ; si `verifier-production.sh` échoue, le trafic y revient.
 - **Lighthouse : médiane de 3 mesures**, comme Lighthouse CI : la première mesure, navigateur froid, donnait 72 sur la page d'accueil contre 100 ensuite.
+- **Lighthouse dans la CI : 75 pour les pages avec carte** (choix du porteur du projet). Les machines de la CI n'ont pas de carte graphique ; WebGL y est émulé et les pages avec carte obtenaient 79 à 99 selon les passages, contre 100 sur un poste réel. Le critère « ≥ 90 » est vérifié sur un poste réel avant chaque version.
 - **Pipeline hors Docker pour la recette** : Docker étant indisponible, l'environnement exact du projet a été recréé depuis `uv.lock` (Python 3.12, dans un dossier temporaire, sans rien installer sur le poste). Les fichiers publiés ont été régénérés par le pipeline, pas modifiés à la main.
 
 ## Problèmes rencontrés et corrigés
@@ -44,6 +45,7 @@ La V1 est recettée et prête à partir en production. Le procès-verbal ([docs/
 | HSTS absent des en-têtes | Ajouté à `docker/nginx-entetes.conf` |
 | Tests du site qui écrivaient l'adresse en dur | Adresse lue dans `graph.json` |
 | `docs/methode.md` absent du conteneur `pipeline` (nouveau test) | Montage en lecture seule dans `compose.yaml` |
+| CI : performance Lighthouse 84 et 79 sur la fiche et les propriétaires (WebGL émulé) | Survol des liens activé à la première approche de la souris (il doublait chaque rendu), centrage initial sans animation : blocage réduit d'un quart ; seuil de 75 pour les pages avec carte dans la CI |
 
 ## Écarts au backlog
 
