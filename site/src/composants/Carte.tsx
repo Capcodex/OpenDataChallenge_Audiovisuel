@@ -13,6 +13,7 @@ import {
   fermer,
   filtreFamille,
   filtreTypes,
+  mediasDuProprietaire,
   noeudsParId,
   ouverture,
   ouvrir,
@@ -21,7 +22,7 @@ import {
   visible,
 } from "../etat/magasin";
 import type { Graphe } from "../graph/types";
-import { fr } from "../i18n/fr";
+import { fr, phraseLien } from "../i18n/fr";
 import {
   COULEUR_ESTOMPEE,
   COULEUR_LIEN_SELECTION,
@@ -42,10 +43,18 @@ export function webglDisponible(): boolean {
 /** Zoom appliqué en centrant la carte sur un média (EF-M2-03), s'il est plus large. */
 const ZOOM_CENTRAGE = 0.6;
 
-export function Carte({ donnees }: { donnees: Graphe }) {
+export function Carte({
+  donnees,
+  surClic = (id) => ouvrir(id, "carte"),
+}: {
+  donnees: Graphe;
+  /** Clic sur un média ; par défaut, ouvre sa fiche à côté de la carte. */
+  surClic?: (id: string) => void;
+}) {
   const conteneur = useRef<HTMLDivElement>(null);
   const rendu = useRef<Sigma | null>(null);
   const [webgl] = useState(webglDisponible);
+  const [bulle, setBulle] = useState<{ texte: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!webgl || !conteneur.current) return;
@@ -64,6 +73,13 @@ export function Carte({ donnees }: { donnees: Graphe }) {
         const actif = mediaActif();
         const noeud = noeudsParId.value.get(id);
         if (noeud && !visible(noeud)) return { ...data, visibility: "hidden" };
+        const calque = mediasDuProprietaire.value;
+        if (!actif && calque) {
+          // Calque propriétaires : ses médias ressortent, nommés ; les autres s'estompent.
+          return calque.has(id)
+            ? { ...data, zIndex: 1, labelVisibility: "visible", highlighted: true }
+            : { ...data, color: COULEUR_ESTOMPEE, label: null, zIndex: 0 };
+        }
         if (!actif) return data;
         const proche = id === actif || graphe.areNeighbors(id, actif);
         return proche
@@ -76,6 +92,10 @@ export function Carte({ donnees }: { donnees: Graphe }) {
         const nb = noeudsParId.value.get(b);
         if ((na && !visible(na)) || (nb && !visible(nb))) return { ...data, visibility: "hidden" };
         const actif = mediaActif();
+        const calque = mediasDuProprietaire.value;
+        if (!actif && calque) {
+          return calque.has(a) && calque.has(b) ? data : { ...data, visibility: "hidden" };
+        }
         if (!actif) return data;
         return a === actif || b === actif
           ? { ...data, color: COULEUR_LIEN_SELECTION, zIndex: 1 }
@@ -84,8 +104,19 @@ export function Carte({ donnees }: { donnees: Graphe }) {
     });
     rendu.current = sigma;
 
-    sigma.on("clickNode", ({ node }) => ouvrir(node, "carte"));
+    sigma.on("clickNode", ({ node }) => surClic(node));
     sigma.on("clickStage", fermer);
+    sigma.on("enterEdge", ({ edge, event }) => {
+      const [a, b] = graphe.extremities(edge);
+      const lien = graphe.getEdgeAttributes(edge) as { lift: number; communs: number };
+      const nom = (id: string) => noeudsParId.value.get(id)?.label ?? id;
+      setBulle({
+        texte: phraseLien(nom(a), nom(b), lien.lift, lien.communs),
+        x: event.x,
+        y: event.y,
+      });
+    });
+    sigma.on("leaveEdge", () => setBulle(null));
     sigma.on("enterNode", ({ node }) => (survol.value = node));
     sigma.on("leaveNode", () => (survol.value = null));
 
@@ -95,6 +126,7 @@ export function Carte({ donnees }: { donnees: Graphe }) {
       void survol.value;
       void filtreTypes.value;
       void filtreFamille.value;
+      void mediasDuProprietaire.value;
       sigma.refresh({ skipIndexation: true });
     });
 
@@ -134,6 +166,15 @@ export function Carte({ donnees }: { donnees: Graphe }) {
   return (
     <div class="carte">
       <div ref={conteneur} class="carte__rendu" role="img" aria-label={fr.carte.libelle} />
+      {bulle && (
+        <p
+          class="carte__bulle"
+          aria-hidden="true"
+          style={{ left: `${bulle.x}px`, top: `${bulle.y}px` }}
+        >
+          {bulle.texte}
+        </p>
+      )}
       <div class="carte__commandes">
         <button type="button" aria-label={fr.carte.zoomer} onClick={() => camera()?.zoomIn()}>
           +

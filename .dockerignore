@@ -18,3 +18,5 @@ docs/
 !README.md
 .env
 infra/
+# Source de la page Méthode, convertie au build du site (site/scripts/methode.ts).
+!docs/methode.md

@@ -196,6 +196,11 @@ test("effectif insuffisant : trouvé par la recherche, sans indicateurs (RG-02)"
     "Trop peu de répondants suivent ce média (moins de 50)",
   );
   await expect(fiche(page).getByRole("region")).toHaveCount(0);
+  await expect(
+    fiche(page).getByRole("link", {
+      name: "Pourquoi un seuil de 50 répondants ?",
+    }),
+  ).toHaveAttribute("href", "/methode#quels-medias-apparaissent");
 });
 
 test("chiffres avec effectif et marge, badge « chiffre fragile » (E3-01)", async ({

@@ -31,6 +31,7 @@ export function Panneau({ donnees }: { donnees: Graphe }) {
     if (!ouvert) return;
     const surEchap = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (document.querySelector("dialog[open]")) return; // Échap ferme d'abord la fenêtre ouverte
       const focusDansPanneau = panneau.current?.contains(document.activeElement) ?? false;
       fermer();
       // Le focus ne doit pas rester sur un élément qui disparaît.

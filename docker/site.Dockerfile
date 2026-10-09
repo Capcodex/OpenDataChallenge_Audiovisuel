@@ -19,6 +19,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 FROM base AS build
 COPY --chown=node:node site/ ./
+# Page Méthode : convertie au build depuis docs/methode.md (site/vite.config.ts).
+COPY --chown=node:node docs/methode.md /app/docs/methode.md
 RUN npm run build \
     && find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.json' \
        -o -name '*.svg' -o -name '*.csv' -o -name '*.md' -o -name '*.gexf' \) \

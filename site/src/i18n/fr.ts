@@ -21,6 +21,40 @@ export const fr = {
   description:
     "Quels médias partagent le même public ? Carte des médias français d'après le baromètre de l'Arcom.",
 
+  // Titres et descriptions des pages (balises <title>, description, Open Graph).
+  pages: {
+    carte: {
+      titre: "Graphe des médias français",
+      description:
+        "Quels médias partagent le même public ? Carte des médias français d'après le baromètre de l'Arcom.",
+    },
+    proprietaires: {
+      titre: "Propriétaires des médias · Graphe des médias",
+      description:
+        "Choisir un propriétaire pour voir ses médias sur la carte des publics, avec la source de chaque donnée de propriété.",
+    },
+    jt: {
+      titre: "De quoi parlent les JT du soir (2000-2020) · Graphe des médias",
+      description:
+        "Part de chaque rubrique dans les JT du soir de TF1, France 2, France 3, Arte et M6, et proximité des chaînes, d'après les données de l'INA.",
+    },
+    methode: {
+      titre: "Méthode · Graphe des médias",
+      description:
+        "Sources, calculs, seuils, marges d'incertitude et limites de la carte des médias : ce que les chiffres disent et ce qu'ils ne disent pas.",
+    },
+    tableau: {
+      titre: "Données et vue tableau · Graphe des médias",
+      description:
+        "Tous les médias de la carte sous forme de tableau, et les données agrégées à télécharger en CSV, Parquet et GEXF.",
+    },
+    media: (nom: string) => `${nom} · Graphe des médias`,
+    mediaDescription: (nom: string, n: number, voisins: string[]) =>
+      `Public de ${nom} (${entier.format(n)} répondants) : médias au public le plus proche (${voisins.join(", ")}), profil du public et propriétaire. Baromètre de l'Arcom.`,
+    mediaInsuffisant: (nom: string) =>
+      `${nom} : trop peu de répondants dans le baromètre de l'Arcom pour publier des résultats fiables.`,
+  },
+
   navigation: {
     libelle: "Navigation principale",
     carte: "Carte",
@@ -62,6 +96,72 @@ export const fr = {
     annuler: "Annuler",
   },
 
+  proprietaires: {
+    titre: "Propriétaires",
+    invitation: "Choisissez un propriétaire pour faire ressortir ses médias sur la carte.",
+    filtre: "Filtrer la liste",
+    filtreExemple: "Nom du propriétaire ou du groupe",
+    liste: "Propriétaires",
+    nombreMedias: (n: number) => (n === 1 ? "1 média" : `${n} médias`),
+    aucun: "Aucun propriétaire ne correspond.",
+    carte: "Carte avec calque propriétaires",
+    synthese: "Synthèse du propriétaire",
+    selectionne: "Propriétaire sélectionné",
+    type: { personne: "Personne ou famille", etat: "État", organisation: "Organisation" } as Record<
+      string,
+      string
+    >,
+    via: (groupes: string[]) => `via ${groupes.join(", ")}`,
+    medias: "Médias détenus",
+    familles: (n: number) =>
+      n === 1
+        ? "Ses médias sont tous dans la même famille de la carte."
+        : `Ses médias sont répartis dans ${n} familles différentes de la carte.`,
+    partNonChiffree: "part non chiffrée",
+    choisir: "Choisissez un propriétaire dans la liste.",
+    nonIdentifies: (n: number) =>
+      `${n} médias de la carte n'ont pas de propriétaire identifié dans la base (presse indépendante, médias en ligne, créateurs).`,
+  },
+
+  jt: {
+    titre: "De quoi parlent les JT du soir ?",
+    introduction:
+      "Répartition des sujets des journaux télévisés du soir de cinq chaînes entre 14 rubriques thématiques, et proximité de leurs profils éditoriaux. Données INA, 2000-2020.",
+    // EF-M5-03 : limites rappelées en permanence.
+    avertissement:
+      "Données closes au 31 décembre 2020. Canal+ n'est pas couverte. Chaque sujet est classé dans une seule rubrique par l'INA.",
+    mesure: "Mesure",
+    mesures: { sujets: "Nombre de sujets", duree: "Durée" } as Record<string, string>,
+    annee: "Année",
+    periode: "Période",
+    profilTitre: (mesure: string, annee: number) =>
+      `Part de chaque rubrique (${mesure.toLowerCase()}, ${annee})`,
+    legende: "Rubriques : cliquer pour isoler",
+    autres: "Autres rubriques",
+    toutes: "Toutes les rubriques",
+    lectureProfil:
+      "Les 7 rubriques les plus fréquentes de l'année sont détaillées ; les 7 autres sont regroupées. Cliquez sur une rubrique pour l'isoler.",
+    profilChaine: (chaine: string, parts: string) => `${chaine} : ${parts}.`,
+    isoleeTitre: (rubrique: string, annee: number) =>
+      `${rubrique} : part dans les JT de chaque chaîne (${annee})`,
+    similariteTitre: (periode: string) => `Proximité des profils éditoriaux (${periode})`,
+    similariteLegende: "Similarité des profils éditoriaux entre chaînes",
+    echelle: "1 = profils identiques",
+    singuliere: (chaine: string, moyenne: string, autres: string) =>
+      `${chaine} a le profil le plus singulier sur cette période : similarité moyenne de ${moyenne} avec les autres chaînes, contre ${autres} en moyenne entre les quatre autres.`,
+    definition:
+      "Similarité = 1 − distance de Jensen-Shannon entre les répartitions des 14 rubriques, calculée par le pipeline sur toute la période.",
+    source:
+      "Source : INA, baromètre thématique des journaux télévisés, 2000-2020 (Licence Ouverte).",
+    rappel:
+      "Ce module décrit des choix éditoriaux (de quoi parlent les JT), à la différence de la carte, qui décrit des publics.",
+  },
+
+  methode: {
+    sommaire: "Sommaire de la page",
+    surCettePage: "Sur cette page",
+  },
+
   legende: {
     titre: "Familles de médias",
     lecture: "Taille du point = part du public. Épaisseur du lien = proximité des publics.",
@@ -80,6 +180,16 @@ export const fr = {
     recentrer: "Recentrer la carte",
     filtresTypes: "Types de médias",
     tousTypes: "Tous",
+    typesPluriel: {
+      tv: "Chaînes TV",
+      info: "Chaînes d'info",
+      radio: "Radios",
+      journal: "Journaux",
+      magazine: "Magazines",
+      web: "En ligne",
+      createur: "Créateurs",
+      jt: "JT",
+    } as Record<string, string>,
     bientot: "Disponible prochainement",
   },
 
@@ -186,7 +296,33 @@ export const fr = {
       age: "Âge moyen",
       voisins: "3 voisins les plus proches",
     },
+    trier: (colonne: string) => `Trier par ${colonne.toLowerCase()}`,
+    position: (moyenne: number, bas: number, haut: number) =>
+      `${formaterNombre(moyenne)} (${formaterNombre(bas)}–${formaterNombre(haut)})`,
+    age: (ans: number) => `${entier.format(ans)} ans`,
+    nombreMedias: (n: number, total: number) =>
+      n === total
+        ? `${entier.format(n)} médias`
+        : `${entier.format(n)} médias sur ${entier.format(total)}`,
+    aucun: "Aucun média ne correspond au filtre.",
+    sansWebgl:
+      "Votre navigateur ne peut pas afficher la carte interactive : voici la vue tableau, qui contient toutes les informations de la carte.",
     telechargementsTitre: "Télécharger les données",
+    fichiers: [
+      {
+        fichier: "medias.csv",
+        format: "CSV",
+        description: "Médias, profils des publics, familles",
+      },
+      { fichier: "liens.csv", format: "CSV", description: "Liens de co-audience, lift et marges" },
+      { fichier: "proprietes.csv", format: "CSV", description: "Médias, groupes et propriétaires" },
+      { fichier: "graphe.gexf", format: "GEXF", description: "Graphe complet, pour Gephi" },
+      { fichier: "medias.parquet", format: "Parquet", description: "Médias (format typé)" },
+      { fichier: "liens.parquet", format: "Parquet", description: "Liens (format typé)" },
+      { fichier: "proprietes.parquet", format: "Parquet", description: "Propriété (format typé)" },
+    ],
+    licenceDonnees:
+      "Licence : Licence Ouverte. Citer : Arcom, baromètre Les Français et l'information ; traitement Graphe des médias.",
     telechargementsDetail:
       "Données agrégées uniquement, au-dessus des seuils d'effectif. Aucune réponse individuelle.",
     dictionnaire: "Dictionnaire des colonnes",
@@ -221,6 +357,7 @@ export const fr = {
     liens: "Liens entre médias",
     cartouche: "Cartouche de source (obligatoire)",
     telecharger: (format: string) => `Télécharger le ${format}`,
+    titreProprietaire: (nom: string) => `Médias détenus par ${nom}`,
   },
 } as const;
 

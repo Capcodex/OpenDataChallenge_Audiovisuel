@@ -1,13 +1,15 @@
+import { page } from "../etat/magasin";
 import { fr } from "../i18n/fr";
+import { CHEMINS, type Page } from "../pages";
 import { Recherche } from "./Recherche";
 
-// Pages du site ; celles des sprints suivants sont annoncées sans lien (pas de page 404).
-const PAGES: { cle: keyof typeof fr.navigation; href: string | null }[] = [
-  { cle: "carte", href: "/" },
-  { cle: "proprietaires", href: null },
-  { cle: "jt", href: null },
-  { cle: "methode", href: null },
-  { cle: "donnees", href: "/telechargements/dictionnaire.md" },
+// Navigation principale : l'onglet « Données » mène à la vue tableau et aux téléchargements.
+const PAGES: { cle: keyof typeof fr.navigation; page: Page }[] = [
+  { cle: "carte", page: "carte" },
+  { cle: "proprietaires", page: "proprietaires" },
+  { cle: "jt", page: "jt" },
+  { cle: "methode", page: "methode" },
+  { cle: "donnees", page: "tableau" },
 ];
 
 export function EnTete() {
@@ -23,22 +25,16 @@ export function EnTete() {
         <span>{fr.marque}</span>
       </a>
       <nav aria-label={fr.navigation.libelle} class="en-tete__navigation">
-        {PAGES.map(({ cle, href }) =>
-          href ? (
-            <a
-              key={cle}
-              href={href}
-              aria-current={cle === "carte" ? "page" : undefined}
-              class="en-tete__lien"
-            >
-              {fr.navigation[cle]}
-            </a>
-          ) : (
-            <span key={cle} class="en-tete__lien" aria-disabled="true" title={fr.carte.bientot}>
-              {fr.navigation[cle]}
-            </span>
-          ),
-        )}
+        {PAGES.map(({ cle, page: cible }) => (
+          <a
+            key={cle}
+            href={CHEMINS[cible]}
+            aria-current={page.value === cible ? "page" : undefined}
+            class="en-tete__lien"
+          >
+            {fr.navigation[cle]}
+          </a>
+        ))}
       </nav>
       <Recherche />
     </header>

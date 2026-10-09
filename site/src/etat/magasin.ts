@@ -6,7 +6,13 @@ import { computed, effect, signal } from "@preact/signals";
 
 import { cinqVoisins } from "../fiche/fiche-donnees";
 import type { Graphe, Noeud, TypeMedia } from "../graph/types";
+import { pageDepuisChemin, type Page } from "../pages";
 import { ETAT_VIDE, etatDepuisUrl, urlDepuisEtat, type EtatUrl } from "./url";
+
+/** Page affichée, lue dans l'adresse au démarrage (les pages sont des fichiers distincts). */
+export const page = signal<Page>(
+  typeof location === "undefined" ? "carte" : pageDepuisChemin(location.pathname),
+);
 
 export const donnees = signal<Graphe | null>(null);
 export const erreur = signal<string | null>(null);
@@ -15,6 +21,15 @@ export const selection = signal<string | null>(null);
 export const filtreTypes = signal<TypeMedia[]>([]);
 export const filtreFamille = signal<number | null>(null);
 export const survol = signal<string | null>(null);
+
+/** Calque propriétaires (E4-02) : propriétaire choisi et ses médias affichés. */
+export const proprietaireActif = signal<string | null>(null);
+export const mediasDuProprietaire = computed(() => {
+  const id = proprietaireActif.value;
+  const g = donnees.value;
+  if (!id || !g) return null;
+  return new Set(g.nodes.filter((n) => n.owners.some((o) => o.id === id)).map((n) => n.id));
+});
 
 export const noeudsParId = computed(
   () => new Map<string, Noeud>((donnees.value?.nodes ?? []).map((n) => [n.id, n])),
