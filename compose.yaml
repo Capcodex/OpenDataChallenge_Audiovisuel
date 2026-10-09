@@ -11,6 +11,7 @@ services:
       - ./data:/app/data                 # données brutes et intermédiaires : jamais dans l'image
       - ./site/public:/app/site/public   # sorties agrégées destinées au site
       - ./site/src/graph:/app/site/src/graph:ro   # schéma de graph.json (contrat avec le site)
+      - ./docs/methode.md:/app/docs/methode.md:ro  # chiffres publiés, vérifiés par les tests
       # Code monté en développement : pas besoin de reconstruire l'image à chaque modification.
       - ./pipeline:/app/pipeline:ro
       - ./tests:/app/tests:ro

@@ -230,6 +230,25 @@ test("page pré-générée : titre, Open Graph et résumé sans JavaScript (E2-0
   await contexte.close();
 });
 
+test("sources : mention Arcom, licence et date des données sur chaque écran (CdC § 12.3)", async ({
+  page,
+}) => {
+  for (const adresse of [
+    "/",
+    "/media/france-inter",
+    "/methode",
+    "/tableau",
+    "/jt",
+    "/proprietaires",
+  ]) {
+    await page.goto(adresse);
+    const pied = page.getByRole("contentinfo");
+    await expect(pied, adresse).toContainText("Arcom");
+    await expect(pied, adresse).toContainText("Licence Ouverte");
+    await expect(pied, adresse).toContainText(/Données traitées le \d/);
+  }
+});
+
 // Accessibilité automatique (axe-core) : chaque écran, et la fenêtre d'export ouverte.
 const ECRANS: [string, string, ((page: Page) => Promise<void>)?][] = [
   ["carte", "/"],

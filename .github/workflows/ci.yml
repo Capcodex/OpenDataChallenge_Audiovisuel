@@ -107,8 +107,10 @@ jobs:
       # échouer la CI.
       - name: Contrôle du vocabulaire
         run: |
-          docker compose run --rm -v ./docs:/app/docs:ro site-dev \
-            npm run vocabulaire -- src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md
+          docker compose run --rm -v ./docs:/app/docs:ro -v ./README.md:/app/README.md:ro \
+            -v ./CONTRIBUTING.md:/app/CONTRIBUTING.md:ro site-dev npm run vocabulaire -- \
+            src/i18n/fr.ts ../docs/methode.md ../docs/donnees.md ../docs/recette.md \
+            ../README.md ../CONTRIBUTING.md
 
       - name: Construire l'image de production du site
         uses: docker/build-push-action@v6
@@ -152,8 +154,10 @@ jobs:
 
       # Scénario d'Inès et parcours du sprint 6, dans un vrai navigateur, contre l'image testée
       # ci-dessus (CdC technique § 12.2).
-      - name: Tests de bout en bout (Playwright)
+      - name: Tests de bout en bout (Playwright, axe-core, Lighthouse)
         run: |
           docker compose --profile test build e2e
           docker compose --profile test run --rm e2e
+          # Budgets Lighthouse : performance ≥ 90, accessibilité ≥ 95 (CdC fonctionnel § 12.3).
+          docker compose --profile test run --rm e2e npm run lighthouse
           docker compose --profile test down

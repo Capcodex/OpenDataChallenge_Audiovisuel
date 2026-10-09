@@ -20,3 +20,9 @@ variable "images_conservees" {
   type        = number
   default     = 10
 }
+
+variable "instances_production_max" {
+  description = "Nombre maximal d'instances du service de production (site statique : 3 suffisent)."
+  type        = number
+  default     = 3
+}
