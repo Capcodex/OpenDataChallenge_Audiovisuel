@@ -55,6 +55,20 @@ services:
       start_period: 10s
       start_interval: 1s
 
+  # Tests de bout en bout contre l'image de production (CdC technique § 12.2) : `make test-e2e`
+  e2e:
+    build:
+      context: .
+      dockerfile: docker/e2e.Dockerfile
+    image: graphe-medias-e2e:dev
+    profiles: ["test"]
+    depends_on:
+      site:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://site:8080
+    ipc: host          # recommandé par Playwright pour Chromium
+
   # Base graphe d'analyse (ADR-002), hors du site : `make neo4j` puis http://localhost:7474
   neo4j:
     image: neo4j:5-community@sha256:c7d25c0eeebfe125718d58b72ed5d663c85d0479047733845eb2237c67ce8069

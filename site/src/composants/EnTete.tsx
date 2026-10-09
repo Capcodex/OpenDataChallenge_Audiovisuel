@@ -1,4 +1,5 @@
 import { fr } from "../i18n/fr";
+import { Recherche } from "./Recherche";
 
 // Pages du site ; celles des sprints suivants sont annoncées sans lien (pas de page 404).
 const PAGES: { cle: keyof typeof fr.navigation; href: string | null }[] = [
@@ -39,6 +40,7 @@ export function EnTete() {
           ),
         )}
       </nav>
+      <Recherche />
     </header>
   );
 }

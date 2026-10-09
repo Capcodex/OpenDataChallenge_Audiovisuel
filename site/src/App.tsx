@@ -33,9 +33,13 @@ export function App() {
             {erreur.value}
           </p>
         ) : !g ? (
-          <p class="message" aria-busy="true">
-            {fr.etats.chargement}
-          </p>
+          // Maquette « États », cas 6 : squelette de la carte pendant le chargement.
+          <div class="chargement" aria-busy="true">
+            <div class="chargement__carte">
+              <p role="status">{fr.etats.chargement}</p>
+            </div>
+            <div class="chargement__panneau" />
+          </div>
         ) : (
           <>
             <div class="principal__carte">

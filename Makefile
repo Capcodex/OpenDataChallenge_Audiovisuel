@@ -3,7 +3,7 @@ COMPOSE = docker compose
 RUN = $(COMPOSE) run --rm pipeline
 
 .PHONY: build pipeline ingest check test test-unit lint format shell clean-interim fichiers-locaux \
-	exploration dev site site-stop test-site lint-site neo4j neo4j-stop reproductibilite
+	exploration dev site site-stop test-site test-e2e lint-site neo4j neo4j-stop reproductibilite
 
 # macOS : si le projet est dans un dossier synchronisé avec iCloud Drive, macOS peut retirer les
 # fichiers du disque (« dataless ») ; Docker ne peut alors plus les lire (Errno 35).
@@ -62,6 +62,10 @@ site-stop:                        ## Arrêter les services du site
 
 test-site: fichiers-locaux        ## Tests Vitest du site
 	$(COMPOSE) run --rm site-dev npm test
+
+test-e2e: fichiers-locaux         ## Tests de bout en bout (Playwright) contre l'image de production
+	$(COMPOSE) --profile test build site e2e
+	$(COMPOSE) --profile test run --rm e2e; code=$$?; $(COMPOSE) --profile test down; exit $$code
 
 lint-site: fichiers-locaux        ## ESLint, Prettier et contrôle du vocabulaire (RG-20)
 	$(COMPOSE) run --rm -v ./docs:/app/docs:ro site-dev sh -c "npm run lint && \

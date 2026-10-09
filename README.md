@@ -38,6 +38,7 @@ Sans `make` : `docker compose run --rm pipeline [commande]`.
 | `make dev` | Site en développement (Vite, rechargement à chaud) : http://localhost:5173 |
 | `make site` / `make site-stop` | Site de production (nginx, lecture seule) : http://localhost:8080 |
 | `make test-site`, `make lint-site` | Tests Vitest ; ESLint, Prettier et contrôle du vocabulaire (RG-20) |
+| `make test-e2e` | Tests de bout en bout (Playwright, scénario d'Inès) contre l'image de production |
 | `make format` | Formatage Python (ruff) |
 | `make reproductibilite` | Deux exécutions forcées : les fichiers produits doivent être identiques |
 | `make neo4j` / `make neo4j-stop` | Base graphe d'analyse : chargement, requêtes d'exemple ([docs/requetes.cypher](docs/requetes.cypher)), http://localhost:7474 |
@@ -54,6 +55,7 @@ docs/            walkthrough.md (visite guidée), DAT.md (architecture), methode
 data/            données téléchargées et calculées — non versionné
 site/            site web : Vite + TypeScript + Preact (squelette), public/ (données agrégées pour le site)
 infra/           infrastructure Google Cloud en Terraform (docs/deploiement.md)
+e2e/             tests de bout en bout Playwright (CdC technique § 12.2)
 ```
 
 ### Données produites

@@ -32,6 +32,12 @@ export const fr = {
 
   recherche: {
     libelle: "Rechercher un média",
+    exemple: "Rechercher un média (ex. France Inter)",
+    suggestions: "Suggestions",
+    insuffisant: "effectif insuffisant",
+    // Annonce pour les lecteurs d'écran (zone live).
+    nombreResultats: (n: number) =>
+      n === 0 ? "Aucun média trouvé." : n === 1 ? "1 média trouvé." : `${n} médias trouvés.`,
     aucunResultat: "Aucun média trouvé.",
     aucunResultatDetail: "Ce média n'est peut-être pas couvert par le baromètre de l'Arcom.",
     regional:
@@ -51,7 +57,7 @@ export const fr = {
     exporter: "Exporter",
     telechargerDonnees: "Télécharger les données",
     copierMention: "Copier la mention de source",
-    mentionCopiee: "Mention copiée",
+    mentionCopiee: "Mention de source copiée",
     fermer: "Fermer",
     annuler: "Annuler",
   },
@@ -97,11 +103,19 @@ export const fr = {
   },
 
   fiche: {
+    libelle: "Fiche média",
+    fermer: "Fermer la fiche",
     effectif: (n: number) => `n = ${entier.format(n)} répondants`,
     fragile: "Chiffre fragile",
+    statut: { public: "Service public", prive: "Privé" } as Record<string, string>,
     voisinsTitre: "Médias au public le plus proche",
     voisin: (lift: number, communs: number) =>
       `× ${formaterNombre(lift)} · ${entier.format(communs)} communs`,
+    margeLift: (bas: number, haut: number) =>
+      `marge ${formaterNombre(bas)}–${formaterNombre(haut)}`,
+    voisinFragile: "fragile",
+    voisinsMoins: (n: number, communsMin: number) =>
+      `Seuls ${n} liens atteignent les seuils de publication (${communsMin} répondants en commun et lift significatif) : ce média a donc ${n} voisins.`,
     lectureLift:
       "« × 2 » : les personnes qui suivent ce média sont deux fois plus nombreuses que la moyenne à suivre aussi l'autre.",
     profilTitre: "Profil du public",
@@ -109,9 +123,14 @@ export const fr = {
     echelleGauche: "0 · très à gauche",
     echelleCentre: "5",
     echelleDroite: "10 · très à droite",
+    nonReponses: (part: number) =>
+      `${formaterPart(part)} de son public ne se positionne pas sur cette échelle.`,
     ageTitre: "Âge moyen",
     age: (ans: number) => `≈ ${entier.format(ans)} ans`,
+    ageMarge: (bas: number, haut: number) =>
+      `marge ${entier.format(bas)}–${entier.format(haut)} ans`,
     moins35Titre: "Moins de 35 ans",
+    partMarge: (bas: number, haut: number) => `marge ${formaterPart(bas)}–${formaterPart(haut)}`,
     confianceTitre: "Confiance",
     // ADR-006 : part de « source de référence » parmi les personnes qui ont noté le média.
     confiance: (part: number) =>
@@ -120,6 +139,14 @@ export const fr = {
     proprieteTitre: "Propriété",
     groupe: "Groupe",
     proprietaires: "Propriétaire(s)",
+    aucunGroupe: "Aucun groupe",
+    part: (part: number) => formaterPart(part),
+    nonIdentifie: "Propriétaire non identifié dans la base de propriété.",
+    sourcePropriete: (source: string, date: string) => `Source : ${source}, ${date}.`,
+    citerTitre: "Citer et partager",
+    lienPermanent: "Lien permanent",
+    copieImpossible:
+      "Copie automatique impossible : sélectionnez le texte ci-dessous, puis copiez-le (Ctrl+C ou ⌘+C).",
   },
 
   etats: {

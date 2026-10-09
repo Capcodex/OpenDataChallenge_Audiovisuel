@@ -27,3 +27,10 @@ infra/.terraform/
 infra/*.tfstate
 infra/*.tfstate.*
 infra/terraform.tfvars
+
+# Tests de bout en bout (e2e/)
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+# En-têtes HTTP relevés par les contrôles (CI, poste local)
+entetes.txt
