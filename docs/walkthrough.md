@@ -36,7 +36,7 @@ Prérequis : Docker avec Docker Compose v2. Rien d'autre.
 cd ~/dev/graphe-medias
 make build      # construit l'image du pipeline (≈ 1 min la première fois)
 make pipeline   # télécharge les sources, les vérifie, prépare les données (≈ 12 s)
-make test       # 118 tests (+ 40 tests du site : make test-site)
+make test       # 118 tests (+ 60 tests du site : make test-site ; 7 de bout en bout : make test-e2e)
 ```
 
 Sortie attendue de `make pipeline` (première exécution) :

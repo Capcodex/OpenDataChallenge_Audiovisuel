@@ -1,15 +1,46 @@
-import { noeudsParId, selection, voisins } from "../etat/magasin";
+/**
+ * Panneau latéral (E2-02, maquette « Carte et fiche »). Sans sélection : présentation de la carte.
+ * Avec sélection : fiche du média, ou explication de l'effectif insuffisant (RG-02).
+ *
+ * La fiche se ferme par son bouton et par la touche Échap (EF-M3-09). Ouverte depuis la recherche
+ * ou une fiche voisine, elle reçoit le focus : les lecteurs d'écran annoncent le média.
+ */
+import { useEffect, useRef } from "preact/hooks";
+
+import { autresParId, fermer, noeudsParId, ouverture, selection } from "../etat/magasin";
 import type { Graphe } from "../graph/types";
 import { fr } from "../i18n/fr";
+import { Fiche, FicheInsuffisante } from "./Fiche";
+import { ID_RECHERCHE } from "./Recherche";
 
-/**
- * Panneau latéral. Sans sélection : présentation de la carte (maquette « Explorer le paysage
- * médiatique »). Avec sélection : aperçu du média et de ses voisins ; la fiche complète (profil du
- * public, propriété) arrive au sprint 6.
- */
 export function Panneau({ donnees }: { donnees: Graphe }) {
-  const media = selection.value ? noeudsParId.value.get(selection.value) : undefined;
-  if (!media) {
+  const id = selection.value;
+  const media = id ? noeudsParId.value.get(id) : undefined;
+  const autre = id && !media ? autresParId.value.get(id) : undefined;
+  const titre = useRef<HTMLHeadingElement>(null);
+  const panneau = useRef<HTMLElement>(null);
+  const ouvert = Boolean(media ?? autre);
+
+  useEffect(() => {
+    const o = ouverture.value;
+    if (o && o.id === id && o.provenance !== "carte") titre.current?.focus();
+    // Chaque nouvelle ouverture, même du même média, renvoie le focus au titre.
+  }, [id, ouverture.value?.numero]);
+
+  useEffect(() => {
+    if (!ouvert) return;
+    const surEchap = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const focusDansPanneau = panneau.current?.contains(document.activeElement) ?? false;
+      fermer();
+      // Le focus ne doit pas rester sur un élément qui disparaît.
+      if (focusDansPanneau) document.getElementById(ID_RECHERCHE)?.focus();
+    };
+    addEventListener("keydown", surEchap);
+    return () => removeEventListener("keydown", surEchap);
+  }, [ouvert]);
+
+  if (!ouvert) {
     return (
       <aside class="panneau" aria-labelledby="panneau-titre">
         <h2 id="panneau-titre">{fr.accueil.titre}</h2>
@@ -25,29 +56,14 @@ export function Panneau({ donnees }: { donnees: Graphe }) {
       </aside>
     );
   }
+
   return (
-    <aside class="panneau" aria-labelledby="panneau-titre">
-      <span class="panneau__type">{fr.types[media.type]}</span>
-      <h2 id="panneau-titre">{media.label}</h2>
-      <p class="panneau__effectif">
-        {fr.fiche.effectif(media.n)}
-        {media.fragile && <span class="badge-fragile">{fr.fiche.fragile}</span>}
-      </p>
-      <h3>{fr.fiche.voisinsTitre}</h3>
-      <ol class="panneau__voisins">
-        {voisins.value.slice(0, 8).map(({ id, lien }) => (
-          <li key={id}>
-            <button type="button" onClick={() => (selection.value = id)}>
-              {noeudsParId.value.get(id)?.label ?? id}
-            </button>
-            <span class="panneau__chiffre">{fr.fiche.voisin(lien.lift, lien.n)}</span>
-          </li>
-        ))}
-      </ol>
-      <p class="panneau__discret">{fr.fiche.lectureLift}</p>
-      <button type="button" class="panneau__fermer" onClick={() => (selection.value = null)}>
-        {fr.actions.fermer}
-      </button>
+    <aside ref={panneau} class="panneau fiche" aria-label={fr.fiche.libelle}>
+      {media ? (
+        <Fiche donnees={donnees} media={media} titre={titre} />
+      ) : (
+        autre && <FicheInsuffisante donnees={donnees} media={autre} titre={titre} />
+      )}
     </aside>
   );
 }

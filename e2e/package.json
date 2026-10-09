@@ -1,0 +1,12 @@
+{
+  "name": "graphe-medias-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Tests de bout en bout du site (CdC technique § 12.2), contre l'image de production.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

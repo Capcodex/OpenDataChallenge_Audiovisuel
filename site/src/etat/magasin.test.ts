@@ -6,6 +6,8 @@ import {
   donnees,
   filtreFamille,
   filtreTypes,
+  ouverture,
+  ouvrir,
   selection,
   visible,
   voisins,
@@ -27,15 +29,27 @@ const G = {
 afterEach(() => {
   appliquer(ETAT_VIDE);
   donnees.value = null;
+  ouverture.value = null;
 });
 
 describe("magasin", () => {
-  it("voisins tracés du média sélectionné, du plus fort au plus faible", () => {
+  it("voisins du média sélectionné, du plus fort au plus faible, tracés ou non", () => {
     donnees.value = G;
     selection.value = "a";
     expect(voisins.value.map((v) => v.id)).toEqual(["c", "b"]);
     selection.value = "b";
-    expect(voisins.value.map((v) => v.id)).toEqual(["a"]); // b-c n'est pas tracé
+    expect(voisins.value.map((v) => v.id)).toEqual(["a", "c"]); // b-c retenu, non tracé
+  });
+
+  it("ouvrir une fiche retire les filtres qui masqueraient le média", () => {
+    donnees.value = G;
+    filtreTypes.value = ["tv"];
+    ouvrir("a", "recherche");
+    expect(selection.value).toBe("a");
+    expect(filtreTypes.value).toEqual([]);
+    expect(ouverture.value).toMatchObject({ id: "a", provenance: "recherche" });
+    ouvrir("b", "fiche");
+    expect(ouverture.value?.numero).toBe(2);
   });
 
   it("filtres de type et de famille", () => {

@@ -4,6 +4,7 @@
  */
 import { computed, effect, signal } from "@preact/signals";
 
+import { cinqVoisins } from "../fiche/fiche-donnees";
 import type { Graphe, Noeud, TypeMedia } from "../graph/types";
 import { ETAT_VIDE, etatDepuisUrl, urlDepuisEtat, type EtatUrl } from "./url";
 
@@ -19,16 +20,43 @@ export const noeudsParId = computed(
   () => new Map<string, Noeud>((donnees.value?.nodes ?? []).map((n) => [n.id, n])),
 );
 
-/** Voisins (liens tracés) du média sélectionné, du plus fort lift au plus faible. */
+/** Médias sous le seuil d'affichage (RG-02) : trouvables par la recherche, sans indicateurs. */
+export const autresParId = computed(
+  () => new Map((donnees.value?.others ?? []).map((o) => [o.id, o])),
+);
+
+/** Les 5 voisins du média sélectionné (EF-M3-02), du plus fort lift au plus faible. */
 export const voisins = computed(() => {
   const id = selection.value;
   const g = donnees.value;
   if (!id || !g) return [];
-  return g.edges
-    .filter((e) => e.shown && (e.s === id || e.t === id))
-    .map((e) => ({ id: e.s === id ? e.t : e.s, lien: e }))
-    .sort((a, b) => b.lien.lift - a.lien.lift);
+  return cinqVoisins(g.edges, id);
 });
+
+/**
+ * Dernière ouverture de fiche et sa provenance. Depuis la recherche ou une fiche voisine, la carte
+ * se centre sur le média (EF-M2-03) et le focus passe à la fiche ; un clic sur la carte ne déplace
+ * ni la vue ni le focus.
+ */
+export type Provenance = "carte" | "recherche" | "fiche";
+export const ouverture = signal<{ id: string; provenance: Provenance; numero: number } | null>(
+  null,
+);
+
+export function ouvrir(id: string, provenance: Provenance): void {
+  const n = noeudsParId.value.get(id);
+  // Un média masqué par les filtres serait invisible sur la carte : on retire les filtres.
+  if (n && !visible(n)) {
+    filtreTypes.value = [];
+    filtreFamille.value = null;
+  }
+  selection.value = id;
+  ouverture.value = { id, provenance, numero: (ouverture.value?.numero ?? 0) + 1 };
+}
+
+export function fermer(): void {
+  selection.value = null;
+}
 
 /** Un média passe les filtres de type et de famille. */
 export function visible(n: Noeud): boolean {
@@ -51,7 +79,8 @@ export function appliquer(etat: EtatUrl): void {
 
 /** Lit l'URL au démarrage, puis tient l'URL à jour (retour arrière du navigateur compris). */
 export function synchroniserUrl(g: Graphe): () => void {
-  const medias = new Set(g.nodes.map((n) => n.id));
+  // Les médias sous le seuil ont aussi une adresse : leur fiche explique l'effectif insuffisant.
+  const medias = new Set([...g.nodes, ...g.others].map((n) => n.id));
   const familles = new Set(g.communities.map((c) => c.id));
   const lire = () => appliquer(etatDepuisUrl(location.pathname, location.search, medias, familles));
   lire();

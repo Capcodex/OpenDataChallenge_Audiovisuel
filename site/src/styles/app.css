@@ -33,6 +33,7 @@
 }
 
 .en-tete__navigation {
+  flex: 1 1 auto;
   display: flex;
   flex-wrap: wrap;
   gap: var(--espace-1);
@@ -249,53 +250,16 @@
   font-size: var(--taille-12);
 }
 
-.panneau__effectif {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--espace-3);
-  align-items: center;
-  font-family: var(--police-chiffres);
-  font-size: var(--taille-12);
-}
-
 .badge-fragile {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-2);
   padding: var(--espace-1) var(--espace-4);
   border: 1px solid var(--couleur-alerte-bordure);
   border-radius: var(--rayon-pastille);
   background: var(--couleur-alerte-fond);
   color: var(--couleur-alerte-texte);
   font-family: var(--police-texte);
-}
-
-.panneau__voisins {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.panneau__voisins li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--espace-4);
-  align-items: center;
-  min-height: var(--cible-min);
-  border-bottom: 1px solid var(--couleur-surface-discrete);
-}
-
-.panneau__voisins button,
-.panneau__fermer {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--couleur-accent);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.panneau__fermer {
-  min-height: var(--cible-min);
-  margin-top: var(--espace-5);
 }
 
 .panneau__chiffre {
@@ -314,4 +278,397 @@
   background: var(--couleur-surface);
   color: var(--couleur-texte-discret);
   font-size: var(--taille-12);
+}
+
+.badge-fragile svg {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+}
+
+/* Recherche (E2-01, maquette « Carte et fiche ») */
+.recherche {
+  position: relative;
+  flex: 0 1 340px;
+  min-width: 220px;
+}
+
+.recherche__loupe {
+  position: absolute;
+  top: 50%;
+  left: var(--espace-5);
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--couleur-texte-discret);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.recherche__champ {
+  width: 100%;
+  height: var(--cible-min);
+  padding: 0 var(--espace-5) 0 40px;
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font: inherit;
+  font-size: var(--taille-14);
+}
+
+.recherche__champ:focus {
+  border-color: var(--couleur-accent);
+  outline: 2px solid var(--couleur-focus);
+}
+
+.recherche__menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--espace-2));
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  box-shadow: var(--ombre-menu);
+}
+
+.recherche__menu ul {
+  margin: 0;
+  padding: var(--espace-2) 0;
+  list-style: none;
+}
+
+.recherche__option {
+  display: flex;
+  gap: var(--espace-4);
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--cible-min);
+  padding: 0 var(--espace-6);
+  font-size: var(--taille-14);
+  cursor: pointer;
+}
+
+.recherche__option[aria-selected="true"] {
+  background: var(--couleur-accent-clair);
+}
+
+.recherche__type {
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-12);
+  white-space: nowrap;
+}
+
+.recherche__vide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-1);
+  padding: var(--espace-6);
+  font-size: var(--taille-14);
+}
+
+.recherche__vide span {
+  color: var(--couleur-texte-secondaire);
+}
+
+/* Chargement (maquette « États », cas 6) */
+.chargement {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: var(--espace-6);
+}
+
+.chargement__carte {
+  display: flex;
+  flex: 999 1 640px;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-surface-discrete);
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-14);
+}
+
+.chargement__panneau {
+  flex: 1 1 320px;
+  max-width: 420px;
+  min-height: 240px;
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-surface-discrete);
+}
+
+/* Fiche média (E2-02) */
+.fiche {
+  display: flex;
+  flex-direction: column;
+}
+
+.fiche__en-tete {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--espace-3);
+}
+
+.fiche__titre h2:focus {
+  outline: none;
+}
+
+.fiche__titre h2:focus-visible {
+  outline: 2px solid var(--couleur-accent);
+}
+
+.fiche__fermer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cible-min);
+  height: var(--cible-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  cursor: pointer;
+}
+
+.fiche__fermer svg {
+  fill: none;
+  stroke: var(--couleur-texte);
+  stroke-width: 2;
+}
+
+.fiche__etiquettes {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: var(--espace-3);
+  margin: 0;
+}
+
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: var(--espace-1) var(--espace-4);
+  border-radius: var(--rayon-pastille);
+  background: var(--couleur-fond);
+  font-size: var(--taille-12);
+}
+
+.etiquette--chiffre {
+  font-family: var(--police-chiffres);
+}
+
+.fiche__section {
+  margin-top: var(--espace-6);
+  padding-top: var(--espace-6);
+  border-top: 1px solid var(--couleur-bordure);
+}
+
+.fiche__section h3 {
+  margin-top: 0;
+}
+
+.fiche__section h4 {
+  margin: 0 0 var(--espace-2);
+  font-size: var(--taille-13);
+  font-weight: 600;
+}
+
+.fiche__section p {
+  margin: var(--espace-2) 0;
+}
+
+.fiche__voisins {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche__voisin {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--espace-4);
+  align-items: center;
+  width: 100%;
+  min-height: var(--cible-min);
+  padding: var(--espace-2) var(--espace-3);
+  border: 1px solid transparent;
+  border-radius: var(--rayon-champ);
+  background: none;
+  color: var(--couleur-texte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fiche__voisin:hover {
+  background: var(--couleur-fond);
+}
+
+/* RG-03 : lien dont l'effectif commun est fragile (maquette « États », cas 2). */
+.fiche__voisin--fragile {
+  border: 1px dashed var(--couleur-alerte-bordure);
+}
+
+.fiche__voisin .legende__pastille {
+  background: var(--couleur-noeud-sans-famille);
+}
+
+.fiche__voisin-nom {
+  color: var(--couleur-accent);
+  font-weight: 500;
+}
+
+.fiche__voisin .panneau__chiffre {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.fiche__marge {
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-11);
+}
+
+.fiche__fragile {
+  color: var(--couleur-alerte-texte);
+  font-family: var(--police-texte);
+  font-size: var(--taille-11);
+}
+
+.fiche__indicateur {
+  margin-bottom: var(--espace-5);
+}
+
+.fiche__valeur {
+  font-size: var(--taille-20);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.fiche__echelle {
+  display: flex;
+  justify-content: space-between;
+  color: var(--couleur-texte-discret);
+  font-size: var(--taille-11);
+}
+
+.jauge {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.jauge__axe,
+.jauge__graduation {
+  stroke: var(--couleur-bordure-forte);
+  stroke-width: 2;
+}
+
+.jauge__marge {
+  fill: var(--couleur-accent-clair);
+  stroke: var(--couleur-accent);
+  stroke-width: 1;
+}
+
+.jauge__valeur {
+  fill: var(--couleur-accent);
+  stroke: var(--couleur-surface);
+  stroke-width: 2;
+}
+
+.jauge--fragile .jauge__marge {
+  fill: var(--couleur-alerte-fond);
+  stroke: var(--couleur-alerte-bordure);
+  stroke-dasharray: 4 3;
+}
+
+.fiche__propriete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--espace-2) var(--espace-6);
+  margin: 0;
+}
+
+.fiche__propriete dt {
+  color: var(--couleur-texte-discret);
+}
+
+.fiche__propriete dd {
+  margin: 0;
+}
+
+.fiche__propriete ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bouton {
+  min-height: var(--cible-min);
+  padding: 0 var(--espace-6);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font: inherit;
+  font-size: var(--taille-14);
+  cursor: pointer;
+}
+
+.bouton--principal {
+  width: 100%;
+  border-color: var(--couleur-accent);
+  background: var(--couleur-accent);
+  color: var(--couleur-surface);
+  font-weight: 500;
+}
+
+.bouton--principal:hover {
+  background: var(--couleur-accent-fonce);
+}
+
+.fiche__aide {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-13);
+}
+
+.fiche__mention {
+  width: 100%;
+  padding: var(--espace-3);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-moyen);
+  font-family: var(--police-chiffres);
+  font-size: var(--taille-12);
+  resize: vertical;
+}
+
+.fiche__lien {
+  overflow-wrap: anywhere;
+  font-size: var(--taille-13);
+}
+
+/* Effectif insuffisant (RG-02, maquette « États », cas 1) */
+.fiche__insuffisant {
+  display: flex;
+  gap: var(--espace-5);
+  align-items: flex-start;
+  margin-top: var(--espace-6);
+  padding: var(--espace-6);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+}
+
+.fiche__insuffisant svg {
+  flex: none;
+  fill: none;
+  stroke: var(--couleur-texte-secondaire);
+  stroke-width: 2;
+}
+
+.fiche__insuffisant p {
+  margin: 0;
 }
